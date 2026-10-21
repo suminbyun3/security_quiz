@@ -1,0 +1,446 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#5fb1ef">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>한투에서 살아남기</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Jua&family=Noto+Sans+KR:wght@400;500;700&display=swap">
+<style>
+/* Layout: 미연시(비주얼 노벨) 화면. 고정 배경(여의도 한투 사옥 거리) 위에
+   캐릭터 스탠딩 → 대사창(이름표 + 타자 효과) → 선택지. 표지는 '살아남기' 학습만화 느낌.
+   캐릭터: 굵은 외곽선, 큰 눈, 뾰족머리의 원작 만화풍 오리지널 캐릭터(SVG). */
+:root{
+  --sky:#5fb1ef; --sky2:#cfe8fb; --glass:#3f7fbf; --glass2:#b9d9f4; --green:#2f9e5a; --red:#d9262c;
+  --panel:#ffffff; --panel2:#fff6e6; --fg:#1d1a1a; --muted:#6a6360; --line:#1d1a1a;
+  --accent:#e2231a; --accent2:#1f6fd0; --gold:#ffb400; --orange:#ff7a1a; --soft:#f7efe3;
+  --display:"Black Han Sans","Noto Sans KR",sans-serif; --comic:"Jua","Noto Sans KR",sans-serif;
+  --body:"Noto Sans KR",system-ui,-apple-system,sans-serif;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --sky:#1a2e55; --sky2:#2d4a7a; --glass:#1f3d66; --glass2:#4b6f9e; --green:#1f6b3d; --red:#b51f24;
+  --panel:#231f22; --panel2:#2d2521; --fg:#f6efe8; --muted:#b9ada5; --line:#f6efe8;
+  --accent:#ff5a4f; --accent2:#6ea4ff; --gold:#ffc83d; --orange:#ff9a4a; --soft:#352c28; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --sky:#1a2e55; --sky2:#2d4a7a; --glass:#1f3d66; --glass2:#4b6f9e; --green:#1f6b3d; --red:#b51f24;
+  --panel:#231f22; --panel2:#2d2521; --fg:#f6efe8; --muted:#b9ada5; --line:#f6efe8;
+  --accent:#ff5a4f; --accent2:#6ea4ff; --gold:#ffc83d; --orange:#ff9a4a; --soft:#352c28; color-scheme:dark }
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--sky);color:var(--fg);font-family:var(--body);line-height:1.55;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 2rem}
+h1,h2,h3{font-family:var(--display);font-weight:400;letter-spacing:.01em;text-wrap:balance;margin:0}
+button{font-family:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.wrap{max-width:560px;margin:0 auto;position:relative;z-index:2}
+
+/* ===== 배경: 여의도 한투 사옥 거리 (SVG) ===== */
+.bg{position:fixed;inset:0;z-index:0;overflow:hidden;background:linear-gradient(var(--sky),var(--sky2) 70%)}
+.bg svg{position:absolute;left:50%;bottom:0;transform:translateX(-50%);height:100%;min-width:100%;width:auto}
+.bg .cloud{animation:drift 70s linear infinite}
+.bg .cloud.b{animation-duration:95s}
+@keyframes drift{from{transform:translateX(-200px)}to{transform:translateX(900px)}}
+.bg::after{content:"";position:absolute;inset:0;background:linear-gradient(transparent 55%,rgba(0,0,0,.25))}
+@media (prefers-reduced-motion:reduce){.bg .cloud{animation:none}}
+
+.comicbox{background:var(--panel);border:3px solid var(--line);box-shadow:5px 5px 0 var(--line);padding:1rem 1.1rem;position:relative;border-radius:6px}
+.btn{border:3px solid var(--line);box-shadow:4px 4px 0 var(--line);padding:.85rem 1rem;font-size:1.05rem;font-weight:700;background:var(--accent);color:#fff;width:100%;border-radius:10px;font-family:var(--comic);letter-spacing:.02em;transition:transform .08s,box-shadow .08s;min-height:52px}
+.btn.alt{background:var(--panel);color:var(--fg)}
+.btn.gold{background:var(--gold);color:#1d1a1a}
+.btn:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--line)}
+.lbl{font-family:var(--comic);font-size:.8rem;letter-spacing:.06em;color:var(--muted)}
+
+/* ===== 표지 ===== */
+.cover{padding-block:1.2rem 1rem;display:flex;flex-direction:column;gap:1rem}
+.book{background:var(--panel2);border:4px solid var(--line);border-radius:8px;box-shadow:8px 8px 0 var(--line);overflow:hidden;position:relative}
+.book .strip{display:flex;justify-content:space-between;align-items:center;padding:.5rem .8rem;border-bottom:3px solid var(--line);background:var(--panel);font-family:var(--comic);font-size:.8rem;letter-spacing:.1em;color:var(--muted)}
+.book .strip b{color:var(--accent2);font-weight:400}
+.book .no{position:absolute;left:0;top:3.6rem;width:52px;height:64px;background:var(--accent2);color:#fff;font-family:var(--display);font-size:2.2rem;display:flex;align-items:center;justify-content:center;border:3px solid var(--line);border-left:0;border-radius:0 10px 10px 0;z-index:3}
+.book .ttl{padding:1.2rem 1rem .4rem 4.2rem;text-align:left}
+.book h1{font-size:clamp(2.3rem,11vw,3.6rem);line-height:1.02;color:var(--accent);-webkit-text-stroke:0 transparent;
+  text-shadow:-2px -2px 0 #fff,2px -2px 0 #fff,-2px 2px 0 #fff,2px 2px 0 #fff,0 3px 0 #fff,5px 6px 0 var(--line)}
+.book h1 em{font-style:normal;color:var(--orange);font-size:.8em;display:block;margin-bottom:.1rem}
+.book .sub{font-family:var(--comic);font-size:.95rem;color:var(--muted);padding:0 1rem .2rem 4.2rem}
+.book .art{height:230px;position:relative;overflow:hidden;background:radial-gradient(circle at 60% 40%,#ffd36b,#ff7a1a 55%,#d9262c 100%)}
+.book .art .swirl{position:absolute;inset:-20%;background:repeating-radial-gradient(circle at 70% 60%,transparent 0 28px,rgba(255,255,255,.14) 28px 34px);animation:spin 40s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.book .art .cast{position:absolute;left:0;right:0;bottom:-10px;display:flex;justify-content:center;align-items:flex-end;gap:0}
+.book .art .cast .std{width:34%;max-width:170px;animation:hop 1.4s ease-in-out infinite}
+.book .art .cast .std:nth-child(2){animation-delay:.2s;width:38%;max-width:190px;z-index:2}
+.book .art .cast .std:nth-child(3){animation-delay:.4s}
+@keyframes hop{50%{transform:translateY(-6px)}}
+.book .credit{display:flex;justify-content:space-between;padding:.5rem .8rem;font-family:var(--comic);font-size:.78rem;color:var(--muted);border-top:3px solid var(--line);background:var(--panel)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem}
+.stat{border:3px solid var(--line);background:var(--panel);padding:.5rem .4rem;text-align:center;box-shadow:3px 3px 0 var(--line);border-radius:6px}
+.stat b{font-family:var(--display);font-size:1.5rem;display:block;color:var(--accent2);line-height:1.1}
+.stat small{font-size:.72rem;color:var(--muted)}
+.cover p{margin:0;font-size:.95rem}
+.note{font-size:.76rem;color:#fff;text-align:center;text-shadow:0 1px 2px rgba(0,0,0,.6)}
+@media (prefers-reduced-motion:reduce){.book .art .swirl,.book .art .cast .std{animation:none}}
+
+/* ===== 미연시 화면 ===== */
+.vn{min-height:calc(100svh - 2rem);display:flex;flex-direction:column;justify-content:flex-end;gap:.6rem;padding-block:.8rem .4rem}
+.hud{display:flex;justify-content:space-between;align-items:center;gap:.6rem}
+.hud .chip{font-family:var(--comic);font-size:.8rem;background:var(--panel);border:3px solid var(--line);padding:.2rem .6rem;border-radius:999px;box-shadow:3px 3px 0 var(--line)}
+.hud .chip.y{background:var(--gold);color:#1d1a1a}
+.hp{display:flex;gap:3px;flex:1;justify-content:center}
+.hp i{width:12px;height:12px;border:2px solid var(--line);background:var(--panel);border-radius:3px}
+.hp i.on{background:var(--accent)}
+.stage{flex:1;display:flex;align-items:flex-end;justify-content:center;min-height:230px;position:relative}
+.stage .std{width:min(62vw,250px);filter:drop-shadow(0 8px 0 rgba(0,0,0,.25));animation:enter .35s ease-out both}
+@keyframes enter{from{transform:translateY(16px);opacity:0}}
+.stage .bubble{position:absolute;top:0;right:0;background:#fff;color:#1d1a1a;border:3px solid #1d1a1a;border-radius:999px;padding:.3rem .7rem;font-family:var(--comic);font-size:.85rem;box-shadow:3px 3px 0 #1d1a1a;animation:pop .4s .3s both}
+@keyframes pop{from{transform:scale(0)}}
+.dlg{background:var(--panel);border:3px solid var(--line);border-radius:12px;box-shadow:5px 5px 0 var(--line);padding:1.5rem 1.1rem 1rem;position:relative;min-height:7.6rem}
+.dlg .name{position:absolute;top:-1rem;left:.9rem;background:var(--accent);color:#fff;font-family:var(--comic);font-size:.95rem;padding:.2rem .9rem;border:3px solid var(--line);border-radius:8px;box-shadow:3px 3px 0 var(--line)}
+.dlg .name.me{background:var(--accent2)}
+.dlg .text{font-size:1.05rem;line-height:1.5;min-height:3.2em;margin:0}
+.dlg .cur{position:absolute;right:.9rem;bottom:.5rem;color:var(--accent);font-family:var(--comic);animation:blink 1s steps(2) infinite}
+@keyframes blink{to{opacity:0}}
+.opts{display:flex;flex-direction:column;gap:.55rem;animation:enter .3s ease-out both}
+.opts[hidden]{display:none}
+.opt{text-align:left;background:var(--panel);border:3px solid var(--line);box-shadow:4px 4px 0 var(--line);padding:.8rem 1rem .8rem 2.4rem;font-size:1rem;line-height:1.4;color:var(--fg);position:relative;border-radius:10px;min-height:50px;transition:transform .08s,box-shadow .08s}
+.opt::before{content:"▶";position:absolute;left:.9rem;top:.85rem;color:var(--accent);font-size:.8rem;opacity:.35}
+@media (hover:hover){.opt:hover::before{opacity:1}.opt:hover{background:var(--panel2)}}
+.opt:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--line)}
+.back{align-self:flex-start;background:var(--panel);border:3px solid var(--line);border-radius:999px;color:var(--muted);font-family:var(--comic);font-size:.8rem;padding:.3rem .8rem;min-height:36px;box-shadow:3px 3px 0 var(--line)}
+@media (prefers-reduced-motion:reduce){.stage .std,.stage .bubble,.opts,.dlg .cur{animation:none}}
+
+/* ===== 엔딩 ===== */
+.result{padding-block:1.2rem 1rem;display:flex;flex-direction:column;gap:1rem}
+.endtag{text-align:center;font-family:var(--display);font-size:1.3rem;color:#fff;text-shadow:3px 3px 0 var(--line);letter-spacing:.1em}
+.card{display:grid;grid-template-columns:130px 1fr;gap:1rem;align-items:center}
+.card .std{width:130px;filter:drop-shadow(0 6px 0 rgba(0,0,0,.2));animation:hop 1.4s ease-in-out infinite}
+.card .info{min-width:0;display:flex;flex-direction:column;gap:.3rem}
+.card .code{font-family:var(--comic);font-size:.8rem;color:var(--accent2);letter-spacing:.08em}
+.card .region{font-family:var(--comic);font-size:.8rem;color:#1d1a1a;background:var(--gold);padding:.15rem .6rem;width:max-content;border:2px solid var(--line);border-radius:999px}
+.card .region.out{background:var(--accent2);color:#fff}
+.card .nick{font-size:.88rem;color:var(--muted);font-weight:500}
+.card h2{font-size:clamp(1.8rem,8vw,2.4rem);line-height:1.1;color:var(--accent);text-shadow:2px 2px 0 var(--line)}
+@media (max-width:380px){.card{grid-template-columns:1fr;justify-items:center;text-align:center}.card .info{align-items:center}}
+.desc{font-size:.95rem;margin:0}
+.tags{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.6rem}
+.tags span{font-size:.78rem;padding:.15rem .6rem;border:2px solid var(--line);background:var(--soft);font-weight:500;border-radius:999px}
+.axes{display:flex;flex-direction:column;gap:.7rem}
+.axis{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:.5rem;font-size:.8rem}
+.axis .l{text-align:right}.axis .l,.axis .r{color:var(--muted);min-width:0}
+.axis .on{color:var(--fg);font-weight:700}
+.axis .track{width:104px;height:14px;border:2px solid var(--line);background:var(--panel);display:flex;border-radius:4px}
+.axis .track i{flex:1;margin:1px;background:var(--panel);border-radius:2px}
+.axis .track i.f{background:var(--accent)}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:.7rem}
+.pair .p{display:flex;gap:.6rem;align-items:center;min-width:0;padding:.6rem .7rem}
+.pair .p .std{width:56px;flex:none}
+.pair .p strong{display:block;font-size:.95rem;line-height:1.2}
+.pair .p small{color:var(--muted);font-size:.72rem;display:block}
+.pair .p .lbl{display:block;margin-bottom:.1rem}
+.pair .good .lbl{color:var(--accent)}.pair .bad .lbl{color:var(--accent2)}
+@media (max-width:380px){.pair{grid-template-columns:1fr}}
+.actions{display:flex;flex-direction:column;gap:.6rem}
+.toast{font-size:.82rem;color:#fff;text-align:center;min-height:1.3em;text-shadow:0 1px 2px rgba(0,0,0,.6)}
+
+/* ===== 도감 ===== */
+.all{padding-block:1.4rem 1rem;display:flex;flex-direction:column;gap:1rem}
+.sec{font-size:1.3rem;color:#fff;text-shadow:3px 3px 0 var(--line)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
+.cell{background:var(--panel);border:3px solid var(--line);box-shadow:3px 3px 0 var(--line);padding:.5rem .6rem;min-width:0;display:flex;gap:.5rem;align-items:center;border-radius:8px}
+.cell .std{width:52px;flex:none}
+.cell strong{display:block;font-size:.92rem;line-height:1.2}
+.cell small{color:var(--muted);font-size:.72rem;display:block}
+</style>
+
+<!-- 배경: 여의도 거리, 유리 사옥, 빨간 조형물, 나무 -->
+<div class="bg" aria-hidden="true">
+<svg viewBox="0 0 900 700" preserveAspectRatio="xMidYMax slice">
+ <defs>
+  <pattern id="win" width="22" height="26" patternUnits="userSpaceOnUse"><rect width="22" height="26" fill="var(--glass)"/><rect x="3" y="3" width="16" height="20" fill="var(--glass2)" opacity=".8"/></pattern>
+  <pattern id="win2" width="18" height="22" patternUnits="userSpaceOnUse"><rect width="18" height="22" fill="#6e8cae"/><rect x="2" y="2" width="14" height="18" fill="#dbe8f5" opacity=".7"/></pattern>
+ </defs>
+ <g class="cloud" fill="#fff" opacity=".9"><ellipse cx="80" cy="110" rx="60" ry="22"/><ellipse cx="120" cy="92" rx="40" ry="26"/><ellipse cx="40" cy="100" rx="30" ry="18"/></g>
+ <g class="cloud b" fill="#fff" opacity=".8"><ellipse cx="-120" cy="200" rx="70" ry="24"/><ellipse cx="-80" cy="180" rx="45" ry="30"/></g>
+ <!-- 옆 건물들 -->
+ <rect x="40" y="300" width="150" height="330" fill="url(#win2)" stroke="#1d1a1a" stroke-width="4"/>
+ <rect x="700" y="340" width="170" height="300" fill="url(#win2)" stroke="#1d1a1a" stroke-width="4"/>
+ <rect x="590" y="420" width="120" height="220" fill="#8aa3c2" stroke="#1d1a1a" stroke-width="4"/>
+ <!-- 본사 타워 -->
+ <rect x="300" y="60" width="300" height="580" fill="url(#win)" stroke="#1d1a1a" stroke-width="5"/>
+ <rect x="300" y="60" width="300" height="46" fill="#1d3a6b" stroke="#1d1a1a" stroke-width="5"/>
+ <rect x="330" y="20" width="240" height="40" fill="#2b4f86" stroke="#1d1a1a" stroke-width="5"/>
+ <rect x="320" y="78" width="80" height="12" fill="#fff" opacity=".8"/>
+ <!-- 지면 -->
+ <rect x="0" y="600" width="900" height="100" fill="#cfcac0"/>
+ <rect x="0" y="596" width="900" height="8" fill="#1d1a1a"/>
+ <!-- 나무 -->
+ <g stroke="#1d1a1a" stroke-width="4"><rect x="226" y="560" width="14" height="50" fill="#6b4a2a"/><circle cx="233" cy="540" r="42" fill="var(--green)"/><circle cx="210" cy="560" r="28" fill="var(--green)"/><rect x="118" y="570" width="12" height="40" fill="#6b4a2a"/><circle cx="124" cy="552" r="34" fill="var(--green)"/><rect x="800" y="575" width="12" height="36" fill="#6b4a2a"/><circle cx="806" cy="556" r="32" fill="var(--green)"/></g>
+ <!-- 빨간 조형물 -->
+ <g transform="translate(640 440)" stroke="#1d1a1a" stroke-width="5" stroke-linejoin="round">
+  <ellipse cx="0" cy="160" rx="70" ry="14" fill="#8e8a82"/>
+  <path d="M-40 150 C-70 90 -10 70 -30 20 C-45 -10 0 -30 10 -5 C20 20 -20 40 5 70 C30 100 60 60 40 20 C30 -5 60 -30 70 0 C80 30 40 50 55 90 C70 130 20 160 -40 150 Z" fill="var(--red)"/>
+  <path d="M-60 120 C-90 100 -70 60 -50 80 C-35 95 -45 115 -60 120Z" fill="var(--red)"/>
+ </g>
+</svg>
+</div>
+
+<div class="wrap">
+  <!-- 표지 -->
+  <section class="cover" id="intro">
+    <div class="book">
+      <div class="strip"><span>서바이벌 <b>|</b> 미연시 <b>|</b> 직장생활</span><span>Survival from KIS</span></div>
+      <div class="no">1</div>
+      <div class="ttl"><h1><em>한투에서</em>살아남기</h1></div>
+      <div class="sub">내가 어디까지 갈 수 있을까?</div>
+      <div class="art"><div class="swirl"></div><div class="cast" id="coverCast"></div></div>
+      <div class="credit"><span>글 주임님 | 그림 연금혁신부</span><span>12 스테이지 · 16 엔딩</span></div>
+    </div>
+    <div class="stats">
+      <div class="stat"><b>12</b><small>스테이지</small></div>
+      <div class="stat"><b>16</b><small>엔딩</small></div>
+      <div class="stat"><b>4</b><small>생존 스탯</small></div>
+    </div>
+    <div class="comicbox">
+      <p>당신은 오늘 한국투자증권에 입사한 <b>주임님</b>이에요. 선배, 동기, 부장님, 사장님이 말을 걸어올 때마다 선택지 하나를 고르면 돼요. 12번 고르고 나면 당신이 이 회사에서 어느 직급까지 올라가는지, 아니면 어디로 빠져나가는지 엔딩이 떠요. 참고로 이 게임에선 사장이 돼도 끝까지 주임님이라고 불러요.</p>
+    </div>
+    <button class="btn" id="startBtn">▶ 입사하기</button>
+    <button class="btn alt" id="seeAllBtn">엔딩 도감 보기</button>
+    <span class="note">재미로 보는 테스트예요. 실제 인사 평가와는 아무 상관 없어요.</span>
+  </section>
+
+  <!-- 미연시 -->
+  <section class="vn" id="quiz" hidden>
+    <div class="hud"><span class="chip y" id="qYear">YEAR 1</span><div class="hp" id="hp"></div><span class="chip" id="progText">1/12</span></div>
+    <div class="stage" id="stage"></div>
+    <div class="dlg"><span class="name" id="spk"></span><p class="text" id="qText"></p><span class="cur" id="cur">▼</span></div>
+    <div class="opts" id="opts" hidden></div>
+    <button class="back" id="backBtn">◀ 이전 장면</button>
+  </section>
+
+  <!-- 엔딩 -->
+  <section class="result" id="result" hidden>
+    <div class="endtag">— ENDING —</div>
+    <div class="comicbox card">
+      <div id="rStage"></div>
+      <div class="info">
+        <span class="code" id="rCode"></span>
+        <span class="region" id="rRegion"></span>
+        <span class="nick" id="rNick"></span>
+        <h2 id="rName"></h2>
+      </div>
+    </div>
+    <div class="comicbox"><p class="desc" id="rDesc"></p><div class="tags" id="rTags"></div></div>
+    <div class="comicbox axes" id="axes"></div>
+    <div class="pair">
+      <div class="comicbox p good"><div id="rSoulCh"></div><div style="min-width:0"><span class="lbl">NEXT ROUTE</span><strong id="rSoul"></strong><small>선택 하나만 달랐으면 갔을 곳</small></div></div>
+      <div class="comicbox p bad"><div id="rOppCh"></div><div style="min-width:0"><span class="lbl">NO WAY</span><strong id="rOpp"></strong><small>주임님 인생에 없는 엔딩</small></div></div>
+    </div>
+    <div class="actions">
+      <button class="btn gold" id="copyBtn">결과 복사해서 공유하기</button>
+      <button class="btn alt" id="retryBtn">다시 입사하기</button>
+      <button class="btn alt" id="allBtn">엔딩 도감 보기</button>
+    </div>
+    <div class="toast" id="toast"></div>
+  </section>
+
+  <!-- 도감 -->
+  <section class="all" id="all" hidden>
+    <h2 class="sec">한투 잔류 엔딩 8</h2>
+    <div class="grid" id="gridK"></div>
+    <h2 class="sec">한투 탈출 엔딩 8</h2>
+    <div class="grid" id="gridG"></div>
+    <button class="btn alt" id="homeBtn">처음으로</button>
+  </section>
+</div>
+
+<script>
+// ===== 캐릭터 SVG (만화풍 오리지널) =====
+// c: {hair:'spiky'|'side'|'bob'|'comb'|'bald', hc:머리색, suit:옷색, tie:넥타이색, skin, exp:'smile'|'shout'|'grin'|'glare'|'sweat'|'sleep', glasses, stache, acc}
+function std(c){
+ const skin=c.skin||'#ffd9b3', suit=c.suit||'#2b4a7a', tie=c.tie||'#e2231a', hc=c.hc||'#2a211c';
+ const S='stroke="#1d1a1a" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"';
+ let hairBack='',hairFront='';
+ if(c.hair==='spiky'){hairBack=`<path d="M40 70 L48 30 L66 52 L80 14 L98 46 L118 10 L132 48 L150 24 L158 70 Z" fill="${hc}" ${S}/>`;
+  hairFront=`<path d="M44 78 C50 50 70 42 98 42 C126 42 146 52 154 78 L140 70 L128 84 L116 68 L100 86 L86 68 L72 84 L60 70 Z" fill="${hc}" ${S}/>`}
+ else if(c.hair==='side'){hairBack=`<path d="M38 100 C36 40 70 28 100 28 C132 28 162 42 160 100 L150 72 L130 60 L70 60 L52 74 Z" fill="${hc}" ${S}/>`;
+  hairFront=`<path d="M40 82 C46 44 80 36 110 40 C140 44 150 50 158 84 L136 68 L120 80 L96 66 L72 78 L58 70 Z" fill="${hc}" ${S}/>`}
+ else if(c.hair==='bob'){hairBack=`<path d="M34 110 C30 40 60 26 100 26 C140 26 170 40 166 110 L160 140 L140 132 L60 132 L40 140 Z" fill="${hc}" ${S}/>`;
+  hairFront=`<path d="M40 86 C44 44 76 34 100 36 C128 38 152 46 158 86 L144 74 L126 82 L108 66 L84 80 L64 68 Z" fill="${hc}" ${S}/>`}
+ else if(c.hair==='comb'){hairFront=`<path d="M42 84 C44 48 72 38 100 38 C132 38 154 50 156 84 L150 66 L130 56 L72 58 L52 72 Z" fill="${hc}" ${S}/><path d="M60 60 L140 60" stroke="${hc}" stroke-width="2" fill="none"/>`}
+ else if(c.hair==='wave'){hairBack=`<path d="M36 100 C34 44 66 30 100 30 C134 30 166 44 164 100 L158 150 C150 140 142 150 136 136 L64 136 C58 150 50 140 42 150 Z" fill="${hc}" ${S}/>`;
+  hairFront=`<path d="M40 86 C46 48 78 36 104 38 C136 40 152 54 158 88 L146 70 L134 84 L120 68 L104 84 L90 68 L74 82 L60 70 Z" fill="${hc}" ${S}/>`}
+ else if(c.hair==='bald'){hairFront=`<path d="M46 86 C44 74 52 66 60 70 L60 86 Z M154 86 C156 74 148 66 140 70 L140 86 Z" fill="${hc}" ${S}/>`}
+ // 눈/표정
+ const eyeL=(x,y,r)=>`<ellipse cx="${x}" cy="${y}" rx="${r}" ry="${r*1.25}" fill="#fff" ${S}/><circle cx="${x+2}" cy="${y+2}" r="${r*.55}" fill="${c.iris||'#2a3a6a'}"/><circle cx="${x-1}" cy="${y-2}" r="${r*.22}" fill="#fff"/>`;
+ let eyes=eyeL(80,104,11)+eyeL(122,104,11), brows=`<path d="M66 86 L92 90" fill="none" ${S}/><path d="M134 86 L108 90" fill="none" ${S}/>`, mouth=`<path d="M86 134 Q100 146 114 134" fill="none" ${S}/>`;
+ if(c.exp==='shout'){mouth=`<path d="M82 128 Q100 128 118 128 Q116 158 100 160 Q84 158 82 128Z" fill="#5a1a1a" ${S}/><path d="M88 150 Q100 142 112 150" fill="#ff8b8b" stroke="none"/>`;brows=`<path d="M66 84 L92 94" fill="none" ${S}/><path d="M134 84 L108 94" fill="none" ${S}/>`}
+ else if(c.exp==='grin'){mouth=`<path d="M80 130 Q100 152 120 130 Z" fill="#fff" ${S}/>`}
+ else if(c.exp==='glare'){eyes=`<path d="M68 104 Q80 96 92 104 Q80 112 68 104Z" fill="#fff" ${S}/><circle cx="82" cy="104" r="4" fill="${c.iris||'#2a3a6a'}"/><path d="M108 104 Q120 96 132 104 Q120 112 108 104Z" fill="#fff" ${S}/><circle cx="118" cy="104" r="4" fill="${c.iris||'#2a3a6a'}"/>`;brows=`<path d="M66 90 L94 96" fill="none" ${S}/><path d="M134 90 L106 96" fill="none" ${S}/>`;mouth=`<path d="M88 138 L112 138" fill="none" ${S}/>`}
+ else if(c.exp==='sweat'){mouth=`<path d="M86 140 Q100 130 114 140" fill="none" ${S}/>`;brows=`<path d="M66 92 L92 86" fill="none" ${S}/><path d="M134 92 L108 86" fill="none" ${S}/>`;eyes+=`<path d="M152 92 Q160 104 152 110 Q144 104 152 92Z" fill="#8fd3ff" ${S}/>`}
+ else if(c.exp==='sleep'){eyes=`<path d="M70 106 Q80 114 92 106" fill="none" ${S}/><path d="M108 106 Q120 114 132 106" fill="none" ${S}/>`;mouth=`<circle cx="100" cy="138" r="5" fill="#5a1a1a" ${S}/>`}
+ else if(c.exp==='smug'){eyes=`<path d="M68 104 Q80 98 92 104" fill="none" ${S}/><path d="M108 104 Q120 98 132 104" fill="none" ${S}/>`;mouth=`<path d="M86 132 Q104 146 118 130" fill="none" ${S}/>`}
+ const glasses=c.glasses?`<rect x="66" y="94" width="30" height="20" rx="6" fill="rgba(255,255,255,.35)" ${S}/><rect x="106" y="94" width="30" height="20" rx="6" fill="rgba(255,255,255,.35)" ${S}/><path d="M96 102 L106 102" ${S}/>`:'';
+ const stache=c.stache?`<path d="M84 124 Q100 118 116 124 Q108 130 100 128 Q92 130 84 124Z" fill="${hc}" ${S}/>`:'';
+ const blush=`<ellipse cx="68" cy="124" rx="9" ry="5" fill="#ff8a8a" opacity=".6"/><ellipse cx="132" cy="124" rx="9" ry="5" fill="#ff8a8a" opacity=".6"/>`;
+ // 몸
+ let body;
+ if(c.outfit==='hoodie') body=`<path d="M40 250 L44 190 C46 170 70 160 100 160 C130 160 154 170 156 190 L160 250Z" fill="${suit}" ${S}/><path d="M74 168 Q100 190 126 168 Q100 176 74 168Z" fill="#fff" opacity=".5"/><path d="M100 170 L100 250" ${S} fill="none"/>`;
+ else if(c.outfit==='apron') body=`<path d="M40 250 L44 190 C46 170 70 160 100 160 C130 160 154 170 156 190 L160 250Z" fill="${suit}" ${S}/><path d="M70 182 L130 182 L136 250 L64 250Z" fill="#fff" ${S}/><path d="M70 182 L130 182" ${S}/>`;
+ else body=`<path d="M40 250 L44 190 C46 170 70 160 100 160 C130 160 154 170 156 190 L160 250Z" fill="${suit}" ${S}/><path d="M80 160 L100 198 L120 160 Z" fill="#fff" ${S}/><path d="M96 170 L104 170 L108 210 L100 222 L92 210Z" fill="${tie}" ${S}/>`;
+ // 소품
+ const A={briefcase:`<rect x="140" y="200" width="44" height="34" rx="4" fill="#7a4b22" ${S}/><rect x="154" y="192" width="16" height="8" fill="none" ${S}/>`,
+  coffee:`<path d="M146 196 L178 196 L172 234 L152 234Z" fill="#fff" ${S}/><path d="M178 204 Q194 212 178 222" fill="none" ${S}/><path d="M156 180 Q160 170 156 162" fill="none" stroke="#999" stroke-width="3"/>`,
+  phone:`<rect x="150" y="186" width="22" height="40" rx="4" fill="#1d1a1a" ${S}/><rect x="154" y="192" width="14" height="24" fill="#6ec1ff"/>`,
+  folder:`<rect x="140" y="194" width="44" height="36" fill="#f2d27a" ${S}/><rect x="140" y="188" width="20" height="8" fill="#f2d27a" ${S}/>`,
+  tablet:`<rect x="138" y="192" width="48" height="34" rx="3" fill="#333" ${S}/><rect x="143" y="197" width="38" height="24" fill="#8fd3ff"/>`,
+  cash:`<rect x="138" y="198" width="46" height="26" fill="#3a9d5d" ${S}/><circle cx="161" cy="211" r="7" fill="#9be0b5" ${S}/>`,
+  bag:`<path d="M140 190 L184 190 L190 240 L134 240Z" fill="#1d3b7a" ${S}/><path d="M152 190 Q162 176 172 190" fill="none" ${S}/>`,
+  chicken:`<path d="M140 212 C140 196 180 196 180 212 C180 226 160 230 150 228 L142 240 L144 226 C140 222 140 216 140 212Z" fill="#f2a241" ${S}/>`,
+  crown:`<path d="M60 44 L72 20 L88 40 L100 12 L112 40 L128 20 L140 44Z" fill="#ffb400" ${S}/>`,
+  passport:`<rect x="142" y="192" width="34" height="42" rx="4" fill="#2b3a8a" ${S}/><circle cx="159" cy="213" r="8" fill="none" stroke="#ffd36b" stroke-width="3"/>`,
+  pillow:`<rect x="130" y="196" width="56" height="34" rx="12" fill="#dfe6f4" ${S}/>`,
+  cap:`<path d="M44 76 C48 48 72 40 100 40 C130 40 152 48 156 76Z" fill="#e2231a" ${S}/><path d="M36 78 L164 78 L160 88 L40 88Z" fill="#b51f24" ${S}/>`,
+  headset:`<path d="M52 96 C48 60 72 44 100 44 C128 44 152 60 148 96" fill="none" ${S} stroke-width="6"/><rect x="42" y="90" width="14" height="24" rx="4" fill="#333" ${S}/><rect x="144" y="90" width="14" height="24" rx="4" fill="#333" ${S}/><path d="M56 112 Q60 128 84 128" fill="none" ${S}/>`,
+  none:''};
+ const acc=A[c.acc||'none']||'';
+ const crownFront=(c.acc==='crown'||c.acc==='cap')?acc:'';
+ const handAcc=(c.acc==='crown'||c.acc==='cap')?'':acc;
+ return `<svg class="std" viewBox="0 0 200 256" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  ${hairBack}
+  ${body}
+  <rect x="88" y="140" width="24" height="26" fill="${skin}" ${S}/>
+  <ellipse cx="100" cy="100" rx="56" ry="58" fill="${skin}" ${S}/>
+  <path d="M44 96 Q36 100 44 108" fill="${skin}" ${S}/><path d="M156 96 Q164 100 156 108" fill="${skin}" ${S}/>
+  ${hairFront}${brows}${eyes}${glasses}${blush}${stache}${mouth}${crownFront}
+  <ellipse cx="100" cy="100" rx="56" ry="58" fill="none" ${S}/>
+  ${handAcc}
+ </svg>`;
+}
+
+// ===== 등장인물 (NPC) =====
+const NPC={
+ 선배:{hair:'bob',hc:'#3b2a24',suit:'#4b5d78',tie:'#c9a227',exp:'smile',iris:'#5a3a2a'},
+ 동기:{hair:'spiky',hc:'#1d1a1a',suit:'#2b4a7a',tie:'#1f6fd0',exp:'grin',glasses:true},
+ 부장님:{hair:'comb',hc:'#2a211c',suit:'#1a1f33',tie:'#e2231a',exp:'glare',stache:true},
+ 헤드헌터:{hair:'wave',hc:'#5a2d1a',suit:'#222',tie:'#fff',exp:'smug',acc:'headset'},
+ 사장님:{hair:'comb',hc:'#9a9a9a',suit:'#111',tie:'#c9a227',exp:'smile',glasses:true},
+ 나:{hair:'spiky',hc:'#2a211c',suit:'#2b4a7a',tie:'#e2231a',exp:'sweat'},
+};
+
+// 스탯 4개: A 멘탈(떠남/버팀) · B 야망(소확행/1등) · C 라인(독고다이/사람) · D 한투 DNA(워라밸/성과·속도)
+const AXES=[
+ {k:'A',l:['G','이직 모드'],r:['S','존버 모드']},
+ {k:'B',l:['C','적당히 소확행'],r:['T','1등 아니면 안 됨']},
+ {k:'C',l:['W','독고다이'],r:['N','사람이 재산']},
+ {k:'D',l:['B','워라밸'],r:['H','한투 DNA']},
+];
+// 장면 = 말 거는 사람 + 대사 + 선택지(0=왼쪽 스탯, 1=오른쪽 스탯)
+const Q=[
+ {ax:'D',y:'YEAR 1 · 첫 출근',who:'선배',exp:'smile',bub:'환영해요!',q:'주임님, 첫날이죠? 하나만 미리 말해둘게요. 우리 회사는 할 거면 제대로예요. 각오하셨어요?',a:['…제대로의 기준이 좀 높은 거 아닌가요?','네, 그 말 들으니까 오히려 불타오르는데요']},
+ {ax:'C',y:'YEAR 1 · 점심시간',who:'동기',exp:'grin',bub:'밥 먹자!',q:'주임님, 점심 뭐 드세요? 저 지금 옆 팀 선배들이랑 나가는데 같이 가실래요?',a:['저는 자리에서 먹을게요. 볼 게 있어서요','가요 가요. 옆 팀 분들도 인사드려야죠']},
+ {ax:'B',y:'YEAR 1 · 면담',who:'부장님',exp:'smile',bub:'편하게 말해봐요',q:'주임님, 10년 뒤에 본인 명함에 뭐 적혀 있을 것 같아요?',a:['뭐가 됐든 칼퇴만 되면 괜찮습니다','적어도 팀장은 달고 있어야죠']},
+ {ax:'A',y:'YEAR 2 · 오후 6시',who:'부장님',exp:'shout',bub:'주임님!!',q:'이 자료를 이렇게 올리면 어떡합니까! 숫자가 다 틀렸잖아요. 오늘 안에 다시 가져오세요!',a:['(그날 밤) 헤드헌터 연락처부터 뒤진다','(그날 밤) 소주 한 잔 하고 내일 다시 붙어본다']},
+ {ax:'D',y:'YEAR 3 · 성과급 시즌',who:'동기',exp:'sweat',bub:'봤어요?',q:'주임님, 성과급 명세서 봤어요? 같은 연차인데 저랑 옆 팀 걔랑 두 배 갈렸대요. 이게 맞나…',a:['이런 구조 자체가 불안하다. 고정급이 편하지','당연한 거지. 다음엔 내가 더 받을 자신 있다']},
+ {ax:'C',y:'YEAR 3 · 회식',who:'선배',exp:'grin',bub:'(속삭임)',q:'주임님, 저기 부장님 옆자리 비었는데… 지금 아무도 안 가네요. 어떻게 하실래요?',a:['모른 척 끝자리로 간다','자연스럽게 가서 앉는다']},
+ {ax:'A',y:'YEAR 4 · 모르는 번호',who:'헤드헌터',exp:'smug',bub:'잠깐 통화 괜찮으세요?',q:'주임님, 저희 쪽 증권사에서 연봉 20% 올려드릴 수 있어요. 자리도 바로 있고요. 어떻게 생각하세요?',a:['고민할 게 뭐 있어요, 갈게요','여기서 아직 못 이룬 게 있어서요. 남을게요']},
+ {ax:'B',y:'YEAR 5 · 전사 실적 발표',who:'부장님',exp:'glare',bub:'2등…',q:'전사 실적 나왔어요. 우리 부서 2등이네요. 주임님은 어때요?',a:['2등도 잘한 거죠, 뭐','1등 아니면 의미 없죠. 속이 쓰립니다']},
+ {ax:'D',y:'YEAR 6 · 밤 9시',who:'동기',exp:'sweat',bub:'아직도?',q:'주임님, 9시인데 우리 층 불 다 켜져 있는 거 보여요? 저게 정상인가요?',a:['저게 정상은 아니지…','1등 하려면 이 정도는 해야지']},
+ {ax:'C',y:'YEAR 8 · 인사이동',who:'선배',exp:'smile',bub:'조심해요',q:'주임님 이번에 새로 오신 임원분, 일은 잘하는데 성격 세기로 유명해요. 어떻게 하실 거예요?',a:['일만 받고 사적으로는 거리 둘게요','어떻게든 친해져서 제 편으로 만들어야죠']},
+ {ax:'B',y:'YEAR 10 · 전략회의',who:'사장님',exp:'smile',bub:'누구 없어요?',q:'새 사업 TF 리더를 찾습니다. 지금도 바쁜 거 압니다. 그래도 누가 맡아볼래요?',a:['(조용히 고개를 숙인다)','(손부터 든다) 제가 하겠습니다']},
+ {ax:'A',y:'YEAR 12 · 월요일 아침',who:'나',exp:'sweat',bub:'여의도역 5번 출구',q:'15년 차 주임님. 월요일 아침 여의도역 5번 출구. 지금 나는…',a:['사람인 알림부터 확인한다','어제 못 끝낸 그 딜 생각하며 빨리 걷는다']},
+];
+
+// p: 스탯별 목표값(0=왼쪽, 3=오른쪽). t: 잔류/탈출
+const ENDS=[
+ {n:'주임님',nick:'만년 주임, 그래도 안 나간다',t:'잔류',p:[3,0,1,0],c:{hair:'spiky',hc:'#2a211c',suit:'#4a4f5c',tie:'#9aa3b2',exp:'sleep',acc:'coffee'},d:'승진에 욕심은 없는데 나갈 생각도 없어요. 매일 아메리카노 한 잔 들고 출근해서 할 일 딱 하고 칼퇴. 선배들은 "쟤는 평생 있을 거야"라고 하고, 본인도 딱히 부정 안 해요. 어떻게 보면 제일 평온한 엔딩.',tags:['#존버','#칼퇴','#무욕']},
+ {n:'대리님',nick:'실무의 뼈대',t:'잔류',p:[3,1,1,2],c:{hair:'side',hc:'#2a211c',suit:'#2b4a7a',tie:'#e2231a',exp:'smile',glasses:true,acc:'folder'},d:'회사가 굴러가는 건 사실 이 사람 덕분이에요. 보고서, 자료, 숫자 다 이 손을 거치는데 윗사람 챙기는 데는 영 관심이 없어서 승진은 늘 한 박자 늦어요. 그래도 성과주의는 체질이라 연봉은 꽤 챙깁니다.',tags:['#실무왕','#숫자','#묵묵']},
+ {n:'차장님',nick:'사람으로 올라온 중간관리자',t:'잔류',p:[2,1,3,1],c:{hair:'bob',hc:'#3b2a24',suit:'#3b3b3b',tie:'#1f6fd0',exp:'grin',acc:'phone'},d:'일은 평범한데 사람은 기막히게 잘 챙겨요. 후배 고민 들어주고 임원 생일 챙기고, 이 회사에서 모르는 사람이 없어요. 이직 생각도 가끔 하지만 결국 "여기 사람들이 좋아서" 남아요. 부서의 분위기 메이커.',tags:['#인맥','#분위기메이커','#정']},
+ {n:'부장님',nick:'1등 부서를 만드는 사람',t:'잔류',p:[3,2,2,1],c:{hair:'comb',hc:'#2a211c',suit:'#1a1f33',tie:'#e2231a',exp:'smile',stache:true,acc:'briefcase'},d:'야망도 있고 사람도 챙기고 버티는 힘도 있어요. 다만 밤샘 문화에는 약간 회의적이라 "우리 팀은 효율로 1등 한다"가 모토. 부서원들한테 제일 인기 있는 부장이지만, 임원 승진 레이스에서는 살짝 밀려요.',tags:['#효율1등','#팀장','#리더']},
+ {n:'상무님',nick:'라인 타고 올라온 승부사',t:'잔류',p:[3,2,3,2],c:{hair:'comb',hc:'#555',suit:'#1a1f33',tie:'#c9a227',exp:'smug',glasses:true,acc:'tablet'},d:'일도 잘하는데 결정적으로 윗사람을 잘 읽어요. 어느 라인이 뜨는지 본능적으로 알고, 거기서 성과를 내요. 임원 됐으니까 이제 눈치 안 봐도 될 것 같지만, 사실 여기서부터가 진짜 눈치 게임이에요.',tags:['#라인','#임원','#정치력']},
+ {n:'전무님',nick:'사업본부를 통째로 키운 사람',t:'잔류',p:[3,3,2,3],c:{hair:'side',hc:'#6a6a6a',suit:'#111',tie:'#e2231a',exp:'glare',acc:'cash'},d:'1등 아니면 의미 없고, 밤 9시 불 켜진 사무실이 당연하고, 성과급 구조가 편한 사람. 한투 DNA 그 자체예요. 사람 관리보다는 숫자로 올라왔고, 본부 하나를 업계 1위로 만들었어요.',tags:['#한투DNA','#업계1위','#숫자']},
+ {n:'사장님',nick:'전 부문 1등을 선언하는 사람',t:'잔류',p:[3,3,3,3],c:{hair:'comb',hc:'#9a9a9a',suit:'#111',tie:'#c9a227',exp:'smile',glasses:true,acc:'briefcase'},d:'멘탈, 야망, 라인, DNA 전부 만렙. "할 거면 제대로"를 입에 달고 살고, 사람도 숫자도 다 잡았어요. 신년사에서 전 부문 1위를 선언하고 실제로 해내는 타입. 솔직히 주임님 좀 무서워요.',tags:['#만렙','#전부문1위','#승부사']},
+ {n:'부회장님',nick:'전설이 된 사람',t:'잔류',p:[3,3,3,2],c:{hair:'bald',hc:'#bbb',suit:'#1a1f33',tie:'#fff',exp:'smug',acc:'crown'},d:'사장 다음에 또 올라갈 자리가 있을 줄 몰랐죠? 사람 쪽 스탯이 사장보다 더 높아서, 조직이 "이분은 보내면 안 돼"라고 붙잡은 케이스예요. 이제 밤샘은 안 해요. 대신 모든 사람이 이분 눈치를 봐요.',tags:['#전설','#조직의어른','#상왕']},
+ {n:'치킨집',nick:'여의도 치킨집 사장님',t:'탈출',p:[0,1,3,0],c:{hair:'spiky',hc:'#2a211c',suit:'#e2231a',outfit:'apron',exp:'grin',acc:'chicken'},d:'사람 만나는 건 세상에서 제일 좋아하는데, 숫자로 줄 세우는 건 못 견디겠어요. 그래서 여의도 증권가 뒷골목에 치킨집을 열었어요. 전 직장 동료들이 회식 1차로 와주고, 그게 제일 행복해요. 진짜로.',tags:['#사장님','#단골','#퇴근없음']},
+ {n:'지주사',nick:'한국투자금융지주로 영전',t:'탈출',p:[1,2,3,3],c:{hair:'side',hc:'#333',suit:'#1a1f33',tie:'#c9a227',exp:'smug',glasses:true,acc:'folder'},d:'증권사 현업보다는 그룹 전체 그림을 보는 게 좋아요. 한투 DNA는 확실한데 영업 현장보다 전략, 기획, 관리가 체질. 라인을 잘 타서 지주사로 올라갔고, 거기서 계열사들을 내려다보고 있어요.',tags:['#전략','#그룹','#관리']},
+ {n:'삼성',nick:'삼성증권으로 조용히 이동',t:'탈출',p:[0,2,1,0],c:{hair:'comb',hc:'#2a211c',suit:'#1b3a8a',tie:'#c9a227',exp:'smile',acc:'briefcase'},d:'야망은 있는데 밤샘이랑 성과급 롤러코스터는 못 견디겠어요. 그래서 브랜드 좋고 안정적인 곳으로 옮겼어요. 급하게 안 가고, 품격 있게, 오래. 전 동료들이 "넌 거기가 맞다"고 해요.',tags:['#안정','#브랜드','#품격']},
+ {n:'KB',nick:'KB증권, 금융지주 품으로',t:'탈출',p:[1,1,2,0],c:{hair:'bob',hc:'#2a1a0f',suit:'#5b5b5b',tie:'#ffb400',exp:'smile',acc:'tablet'},d:'은행, 보험, 카드가 한 식구인 큰 조직이 편해요. 혼자 튀어서 1등 하는 것보다 전체 안에서 내 자리 잘 지키는 쪽. 워라밸 챙기면서 사람도 적당히 챙기는, 조직이 좋아하는 모범생 스타일.',tags:['#조직형','#워라밸','#모범생']},
+ {n:'NH',nick:'NH투자증권, IB 명가로',t:'탈출',p:[1,2,2,1],c:{hair:'side',hc:'#222',suit:'#1f6f3a',tie:'#f2c94c',exp:'smile',acc:'folder'},d:'딜은 하고 싶은데 한투식 속도전은 좀 버거워요. 농협이라는 든든한 뒷배 아래서 기본기로 차근차근 올라가는 쪽을 골랐어요. 튀지 않고, 맡은 딜은 끝까지. 선배들이 "믿고 맡긴다"고 하는 타입.',tags:['#IB','#기본기','#뒷배']},
+ {n:'미래',nick:'미래에셋증권, 글로벌로',t:'탈출',p:[1,3,1,2],c:{hair:'spiky',hc:'#111',suit:'#d9641e',tie:'#1b3a8a',exp:'shout',acc:'bag'},d:'야망은 사장급인데 무대가 국내로는 안 차요. 해외주식, 글로벌 ETF, 연금까지 세계로 나가는 곳으로 갈아탔어요. 사람 관리보다는 비전으로 밀어붙이는 타입. 짐 싸는 데 주저가 없어요.',tags:['#글로벌','#비전','#개척']},
+ {n:'외사',nick:'외국계 IB로 점프',t:'탈출',p:[0,3,0,3],c:{hair:'wave',hc:'#5a3a1a',suit:'#1a2b5a',tie:'#8fb3e8',exp:'glare',glasses:true,acc:'passport'},d:'성과주의는 완전 체질인데, 한국식 라인이랑 회식은 전혀 안 맞아요. 그래서 실력만 보는 곳으로 갔어요. 연봉은 두 배, 밤은 세 배. 혼자 일하고 혼자 보상받는 게 제일 편한 사람이에요.',tags:['#실력주의','#독고다이','#달러연봉']},
+ {n:'MZ(무직)',nick:'퇴사가 복지',t:'탈출',p:[0,0,0,0],c:{hair:'bob',hc:'#8a4fd1',suit:'#7a7a7a',outfit:'hoodie',exp:'sleep',acc:'pillow'},d:'입사 8개월 만에 알았어요. 여기도, 저기도 아니라는 걸. 지금은 퇴직금으로 쉬면서 "다음은 내가 정한다"고 말하고 있어요. 주변에서는 걱정하지만 본인은 지금이 인생에서 제일 평화로워요. 부럽다.',tags:['#퇴사','#갭이어','#자유']},
+];
+
+const $=id=>document.getElementById(id);
+$('coverCast').innerHTML=std({...NPC.선배,exp:'shout'})+std({...NPC.나,exp:'shout'})+std({...NPC.동기,exp:'shout'});
+
+let idx=0, answers=[], typer=null;
+const screens=['intro','quiz','result','all'];
+function show(s){screens.forEach(x=>$(x).hidden=(x!==s));window.scrollTo({top:0,behavior:'smooth'})}
+
+function render(){
+ const q=Q[idx];
+ $('progText').textContent=(idx+1)+'/12';
+ $('qYear').textContent=q.y;
+ $('hp').innerHTML=Q.map((_,i)=>`<i class="${i<idx?'on':''}"></i>`).join('');
+ const spk=$('spk');spk.textContent=q.who==='나'?'주임님(나)':q.who;spk.classList.toggle('me',q.who==='나');
+ $('stage').innerHTML=std({...NPC[q.who],exp:q.exp})+`<span class="bubble">${q.bub}</span>`;
+ $('opts').innerHTML=q.a.map((t,i)=>`<button class="opt" data-i="${i}">${t}</button>`).join('');
+ $('opts').hidden=true;$('cur').hidden=true;
+ $('backBtn').hidden=(idx===0);
+ type(q.q);
+}
+function type(text){
+ clearInterval(typer);const el=$('qText');el.textContent='';
+ const fast=matchMedia('(prefers-reduced-motion:reduce)').matches;let i=0;
+ const done=()=>{clearInterval(typer);el.textContent=text;$('opts').hidden=false;$('cur').hidden=false};
+ if(fast){done();return}
+ typer=setInterval(()=>{i++;el.textContent=text.slice(0,i);if(i>=text.length)done()},28);
+ el.parentElement.onclick=()=>{if(i<text.length)done()};
+}
+$('opts').addEventListener('click',e=>{const b=e.target.closest('.opt');if(!b)return;answers[idx]=+b.dataset.i;idx++;if(idx>=Q.length){finish()}else render()});
+$('backBtn').onclick=()=>{if(idx>0){idx--;render()}};
+$('startBtn').onclick=$('retryBtn').onclick=()=>{idx=0;answers=[];render();show('quiz')};
+$('seeAllBtn').onclick=$('allBtn').onclick=()=>{renderAll();show('all')};
+$('homeBtn').onclick=()=>show('intro');
+
+function score(){
+ const s={};AXES.forEach(a=>s[a.k]=0);
+ Q.forEach((q,i)=>{if(answers[i]===1)s[q.ax]++});
+ const code=AXES.map(a=>s[a.k]>=2?a.r[0]:a.l[0]).join('');
+ const v=AXES.map(a=>s[a.k]);
+ const ranked=ENDS.map(f=>({f,dist:f.p.reduce((t,x,i)=>t+Math.abs(x-v[i]),0)})).sort((a,b)=>a.dist-b.dist);
+ return {s,code,ranked};
+}
+function finish(){
+ const {s,code,ranked}=score();const f=ranked[0].f;
+ $('rStage').innerHTML=std(f.c);
+ $('rCode').textContent='TYPE '+code;
+ const rg=$('rRegion');rg.textContent=f.t==='잔류'?'STAY · 한투 잔류':'EXIT · 한투 탈출';rg.classList.toggle('out',f.t!=='잔류');
+ $('rNick').textContent=f.nick; $('rName').textContent=f.n; $('rDesc').textContent=f.d;
+ $('rTags').innerHTML=f.tags.map(t=>`<span>${t}</span>`).join('');
+ $('axes').innerHTML=AXES.map(a=>{const r=s[a.k];const right=r>=2;
+  const cells=[0,1,2].map(i=>`<i class="${(right?i<r:i<3-r)?'f':''}"></i>`);if(!right)cells.reverse();
+  return `<div class="axis"><span class="l${right?'':' on'}">${a.l[1]}</span><span class="track">${cells.join('')}</span><span class="r${right?' on':''}">${a.r[1]}</span></div>`}).join('');
+ const soul=ranked[1].f, opp=ranked[ranked.length-1].f;
+ $('rSoulCh').innerHTML=std(soul.c); $('rOppCh').innerHTML=std(opp.c);
+ $('rSoul').textContent=soul.n; $('rOpp').textContent=opp.n;
+ $('toast').textContent='';
+ show('result');
+}
+$('copyBtn').onclick=()=>{
+ const {code,ranked}=score();const f=ranked[0].f;
+ const text=`[한투에서 살아남기]\n주임님의 엔딩: ${f.n} — ${f.nick}\n유형: ${code}\n${f.tags.join(' ')}`;
+ const done=()=>$('toast').textContent='복사했어요. 동기한테 붙여넣기 해보세요.';
+ if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(done).catch(()=>fallback(text))}else fallback(text);
+ function fallback(t){const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done()}catch(e){$('toast').textContent='복사가 막혀 있어요. 결과를 캡처해서 공유해 주세요.'}ta.remove()}
+};
+function renderAll(){
+ const cell=f=>`<div class="cell">${std(f.c)}<div style="min-width:0"><strong>${f.n}</strong><small>${f.nick}</small></div></div>`;
+ $('gridK').innerHTML=ENDS.filter(f=>f.t==='잔류').map(cell).join('');
+ $('gridG').innerHTML=ENDS.filter(f=>f.t==='탈출').map(cell).join('');
+}
+</script>
+</body>
+</html>
