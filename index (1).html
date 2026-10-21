@@ -1,0 +1,410 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>나의 리더십은?</title>
+<style>:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600&family=Noto+Sans+KR:wght@400;500;700&display=swap">
+<style>
+/* Layout: 모바일 FPS 인게임 HUD. 흐린 낮의 야외 전장(오리지널 SVG)을 화면 전체에 깔고,
+   네 모서리에 HUD(미니맵·라운드 타이머·점수·탄약/HP·AP)를 고정, 중앙에 반투명 패널로 콘텐츠.
+   HUD 숫자는 Oswald, 한글은 Noto Sans KR. 단일 테마(게임 화면 고정). */
+:root{
+  --fg:#f2f4f6; --muted:#b8c0c8; --dim:#7c8792;
+  --panel:rgba(14,18,22,.72); --panel2:rgba(28,34,40,.7); --edge:rgba(255,255,255,.22); --edge2:rgba(255,255,255,.1);
+  --blue:#4f9ad8; --red:#d9483b; --amber:#e8a93a; --green:#7cc46a; --ice:#dfe7ee;
+  --hud:"Oswald","Noto Sans KR",sans-serif;
+  --body:"Noto Sans KR",system-ui,-apple-system,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:#3a4650;color:var(--fg);font-family:var(--body);line-height:1.55;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 5.2rem;min-height:100%}
+h1,h2,h3{font-weight:700;text-wrap:balance;margin:0}
+button{font-family:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+.wrap{max-width:560px;margin:0 auto;position:relative;z-index:2;padding-top:4.4rem}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:#2a333b}
+
+/* ===== 배경: 흐린 낮 전장 ===== */
+.bg{position:fixed;inset:0;z-index:0;overflow:hidden;background:linear-gradient(#8e9aa3 0%,#aeb7bd 38%,#6e7560 52%,#5c6446 70%,#4a5137 100%)}
+.bg svg{position:absolute;left:50%;bottom:0;transform:translateX(-50%);height:100%;min-width:100%;width:auto}
+.bg .smk{animation:rise 22s linear infinite;opacity:.5}
+.bg .smk.b{animation-duration:30s;animation-delay:-12s}
+@keyframes rise{from{transform:translate(0,40px)}to{transform:translate(-60px,-240px)}}
+.bg::after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 50% 55%,transparent 50%,rgba(0,0,0,.45) 100%)}
+@media (prefers-reduced-motion:reduce){.bg .smk{animation:none}}
+
+/* ===== HUD (화면 고정) ===== */
+.hud{position:fixed;inset:0;z-index:1;pointer-events:none;font-family:var(--hud);color:var(--fg);text-shadow:0 1px 2px rgba(0,0,0,.8)}
+.hud .map{position:absolute;left:max(16px,env(safe-area-inset-left,0px));top:calc(env(safe-area-inset-top,0px) + 10px);width:86px;height:86px;border:1px solid var(--edge);background:rgba(10,14,18,.6);border-radius:3px;overflow:hidden}
+.hud .map svg{width:100%;height:100%}
+.hud .round{position:absolute;left:50%;top:calc(env(safe-area-inset-top,0px) + 10px);transform:translateX(-50%);display:flex;align-items:center;gap:.5rem;background:rgba(10,14,18,.55);border:1px solid var(--edge2);border-radius:999px;padding:.25rem .8rem}
+.hud .round .dots{display:flex;gap:4px}
+.hud .round .dots i{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3)}
+.hud .round .dots.l i.on{background:var(--blue);border-color:#9fd0ff;box-shadow:0 0 5px var(--blue)}
+.hud .round .dots.r i.on{background:var(--red);border-color:#ff9a90;box-shadow:0 0 5px var(--red)}
+.hud .round b{font-weight:600;font-size:1.05rem;letter-spacing:.08em;min-width:3.4em;text-align:center}
+.hud .score{position:absolute;right:max(16px,env(safe-area-inset-right,0px));top:calc(env(safe-area-inset-top,0px) + 10px);text-align:right;line-height:1}
+.hud .score b{display:block;font-size:1.6rem;font-weight:600}
+.hud .score small{font-size:.8rem;color:var(--muted);font-weight:500}
+.hud .bottom{position:absolute;left:max(16px,env(safe-area-inset-left,0px));right:max(16px,env(safe-area-inset-right,0px));bottom:calc(env(safe-area-inset-bottom,0px) + 10px);display:flex;flex-direction:column;gap:.45rem}
+.hud .ammo{display:flex;align-items:center;gap:.5rem}
+.hud .ammo .mag{font-size:1.25rem;font-weight:600;letter-spacing:.05em}
+.hud .ammo .mag small{color:var(--muted);font-size:.9rem}
+.hud .ammo .slot{height:34px;border:1px solid var(--edge);background:rgba(10,14,18,.55);border-radius:3px;display:flex;align-items:center;justify-content:center;padding:0 .6rem;font-size:.72rem;letter-spacing:.14em;color:var(--muted)}
+.hud .ammo .slot.on{border-color:#fff;color:var(--fg);background:rgba(40,50,60,.7)}
+.hud .bars{display:grid;grid-template-columns:auto 1fr auto 1fr;gap:.5rem;align-items:center;font-size:.75rem;letter-spacing:.12em;color:var(--muted)}
+.hud .bars .bar{height:8px;border:1px solid var(--edge);background:rgba(10,14,18,.55);border-radius:2px;overflow:hidden}
+.hud .bars .bar i{display:block;height:100%;background:#fff;box-shadow:0 0 6px rgba(255,255,255,.6);transition:width .3s}
+.hud .bars .bar.ap i{background:var(--blue);box-shadow:0 0 6px var(--blue)}
+@media (max-width:420px){.hud .map{width:64px;height:64px}.hud .score b{font-size:1.3rem}}
+
+/* ===== 공통 ===== */
+.panel{background:var(--panel);border:1px solid var(--edge);border-radius:4px;padding:1rem 1.1rem;position:relative;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);box-shadow:0 8px 24px rgba(0,0,0,.35)}
+.panel::before{content:"";position:absolute;left:0;top:0;width:24px;height:2px;background:var(--amber)}
+.kicker{font-family:var(--hud);font-size:.72rem;letter-spacing:.2em;color:var(--muted);text-transform:uppercase;font-weight:500;margin-bottom:.5rem}
+.btn{border:1px solid var(--edge);padding:.95rem 1rem;font-size:1rem;width:100%;border-radius:4px;letter-spacing:.06em;min-height:52px;font-weight:700;color:var(--fg);
+  background:var(--panel2);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);box-shadow:0 4px 14px rgba(0,0,0,.35);transition:transform .08s,background .08s}
+.btn.pri{background:linear-gradient(180deg,#f0b84a,#d48f22);color:#1a1206;border-color:#ffd98a}
+.btn.sec{background:linear-gradient(180deg,#5aa6e2,#3b7fbf);border-color:#a7d3ff}
+.btn:active{transform:translateY(2px)}
+
+/* ===== 교관 대화 ===== */
+.officer{display:grid;grid-template-columns:84px 1fr;gap:.7rem;align-items:end}
+.officer .ava{width:84px;height:100px;border:1px solid var(--edge);border-radius:4px;overflow:hidden;background:linear-gradient(180deg,#5a6552,#2f362b);display:grid;place-items:end center;box-shadow:0 6px 16px rgba(0,0,0,.4)}
+.officer .ava svg{width:80px;height:96px}
+.officer .dlg{background:var(--panel);border:1px solid var(--edge);border-radius:4px;padding:1.3rem 1rem .9rem;position:relative;min-width:0;min-height:5.4rem;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);box-shadow:0 8px 24px rgba(0,0,0,.35)}
+.officer .dlg .tag{position:absolute;top:-.75rem;left:.8rem;font-family:var(--hud);font-size:.78rem;letter-spacing:.12em;background:#1d2329;border:1px solid var(--edge);border-radius:3px;padding:.05rem .6rem;color:var(--ice)}
+.officer .dlg .tag::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green);margin-right:.4em;vertical-align:middle;box-shadow:0 0 4px var(--green)}
+.officer .dlg p{margin:0;font-size:1.02rem;line-height:1.5;font-weight:500}
+.officer .dlg p small{display:block;color:var(--muted);font-size:.84rem;font-weight:400;margin-top:.35rem}
+@media (max-width:360px){.officer{grid-template-columns:66px 1fr}.officer .ava{width:66px;height:80px}.officer .ava svg{width:62px;height:76px}}
+
+/* ===== 표지 ===== */
+.cover{display:flex;flex-direction:column;gap:.9rem}
+.title{padding:.4rem 0 .2rem}
+.title .eyebrow{font-family:var(--hud);font-size:.78rem;letter-spacing:.3em;color:var(--muted);font-weight:500}
+.title h1{font-size:clamp(2.4rem,12vw,3.6rem);line-height:1.02;letter-spacing:-.01em;text-shadow:0 2px 0 rgba(0,0,0,.5),0 8px 24px rgba(0,0,0,.6)}
+.title .sub{color:var(--ice);font-size:.95rem;margin-top:.3rem;text-shadow:0 1px 3px rgba(0,0,0,.7)}
+.menu{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
+.menu .btn{min-height:76px;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:.1rem;text-align:left}
+.menu .btn small{font-weight:400;font-size:.74rem;opacity:.85;letter-spacing:0}
+.note{font-size:.72rem;color:var(--ice);text-align:center;text-shadow:0 1px 3px rgba(0,0,0,.8)}
+
+/* ===== 상황(문항) ===== */
+.ops{min-height:calc(100svh - 10rem);display:flex;flex-direction:column;justify-content:center;gap:.8rem}
+.head{display:flex;align-items:center;gap:.6rem}
+.head .x{background:var(--panel);border:1px solid var(--edge);color:var(--fg);width:36px;height:36px;border-radius:3px;font-size:.9rem;display:grid;place-items:center;flex:none}
+.head .name{font-family:var(--hud);font-size:1rem;letter-spacing:.1em;font-weight:600}
+.head .name small{display:block;color:var(--muted);font-size:.72rem;font-family:var(--body);letter-spacing:0;font-weight:400}
+.opts{display:flex;flex-direction:column;gap:.55rem;animation:enter .25s ease-out both}
+@keyframes enter{from{transform:translateY(10px);opacity:0}}
+.opt{text-align:left;background:var(--panel);border:1px solid var(--edge);padding:.9rem 1rem .9rem 3rem;font-size:1rem;line-height:1.4;color:var(--fg);position:relative;border-radius:4px;min-height:54px;
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);box-shadow:0 6px 16px rgba(0,0,0,.3);transition:transform .08s,border-color .08s,background .08s}
+.opt::before{content:attr(data-k);position:absolute;left:.8rem;top:.8rem;width:26px;height:26px;border-radius:3px;display:grid;place-items:center;font-family:var(--hud);font-size:.9rem;font-weight:600;border:1px solid var(--edge);background:rgba(255,255,255,.08)}
+.opt[data-k="A"]::before{border-color:var(--blue);color:#bfe0ff}
+.opt[data-k="B"]::before{border-color:var(--red);color:#ffc0b8}
+@media (hover:hover){.opt:hover{border-color:#fff;background:var(--panel2)}}
+.opt:active{transform:translateY(2px)}
+@media (prefers-reduced-motion:reduce){.opts{animation:none}}
+
+/* ===== 결과 ===== */
+.result{display:flex;flex-direction:column;gap:.8rem}
+.banner{text-align:center;font-family:var(--hud);font-weight:600;font-size:clamp(2rem,10vw,2.8rem);letter-spacing:.2em;line-height:1;color:var(--amber);text-shadow:0 2px 0 rgba(0,0,0,.6),0 0 24px rgba(232,169,58,.5)}
+.banner small{display:block;font-size:.3em;letter-spacing:.3em;color:var(--muted);margin-top:.35rem;font-weight:500}
+.hero{display:grid;grid-template-columns:110px 1fr;gap:1rem;align-items:center}
+.hero .port{width:110px;height:132px;border:1px solid var(--edge);border-radius:4px;display:grid;place-items:center;position:relative;background:linear-gradient(180deg,rgba(60,72,84,.8),rgba(14,18,22,.95))}
+.hero .port svg{width:68px;height:68px}
+.hero .port .lv{position:absolute;left:.4rem;top:.3rem;font-family:var(--hud);font-size:.68rem;letter-spacing:.14em;color:var(--muted)}
+.hero .info{min-width:0;display:flex;flex-direction:column;gap:.25rem}
+.hero .code{font-family:var(--hud);font-size:.72rem;letter-spacing:.2em;color:var(--muted);font-weight:500}
+.hero h2{font-size:clamp(1.7rem,8.5vw,2.3rem);line-height:1.1}
+.hero .style{font-size:.86rem;color:var(--amber);border:1px solid rgba(232,169,58,.5);border-radius:3px;padding:.1rem .6rem;width:max-content;max-width:100%;font-weight:500}
+@media (max-width:380px){.hero{grid-template-columns:1fr;justify-items:center;text-align:center}.hero .info{align-items:center}}
+.desc{font-size:.95rem;margin:0}
+.quote{margin:0;padding:.9rem 1rem;border-left:3px solid var(--amber);background:var(--panel);font-size:1.02rem;font-weight:500;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.quote small{display:block;color:var(--muted);font-size:.72rem;letter-spacing:.08em;margin-top:.3rem;font-weight:400}
+.tags{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.6rem}
+.tags span{font-size:.74rem;padding:.12rem .55rem;border:1px solid var(--edge2);background:rgba(255,255,255,.06);border-radius:3px;color:var(--ice)}
+.stat{display:flex;flex-direction:column;gap:.7rem}
+.row{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:.5rem;font-size:.8rem}
+.row .l{text-align:right}.row .l,.row .r{color:var(--muted);min-width:0}
+.row .on{color:var(--fg);font-weight:700}
+.row .track{width:118px;height:10px;border:1px solid var(--edge);background:rgba(10,14,18,.6);display:flex;border-radius:2px;overflow:hidden}
+.row .track i{flex:1;margin:1px;background:transparent}
+.row .track i.f{background:#fff;box-shadow:0 0 5px rgba(255,255,255,.6)}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
+.pair .p{padding:.7rem .8rem;min-width:0}
+.pair .p strong{display:block;font-size:1.05rem;line-height:1.25}
+.pair .p small{color:var(--muted);font-size:.72rem;display:block}
+.pair .good::before{background:var(--green)}.pair .bad::before{background:var(--red)}
+@media (max-width:380px){.pair{grid-template-columns:1fr}}
+.actions{display:flex;flex-direction:column;gap:.55rem}
+.toast{font-size:.8rem;color:var(--ice);text-align:center;min-height:1.3em;text-shadow:0 1px 3px rgba(0,0,0,.8)}
+
+/* ===== 명부 ===== */
+.all{display:flex;flex-direction:column;gap:.8rem}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:.6rem}
+.card{padding:.8rem .8rem;display:flex;gap:.7rem;align-items:center;min-width:0}
+.card .ico{width:46px;height:46px;flex:none;border:1px solid var(--edge);border-radius:3px;display:grid;place-items:center;background:rgba(255,255,255,.05)}
+.card .ico svg{width:30px;height:30px}
+.card strong{display:block;font-size:.95rem;line-height:1.2}
+.card small{color:var(--muted);font-size:.72rem;display:block}
+</style>
+
+<!-- 배경: 흐린 낮, 마을 외곽 전장 (오리지널 SVG) -->
+<div class="bg" aria-hidden="true">
+<svg viewBox="0 0 900 700" preserveAspectRatio="xMidYMax slice">
+ <defs>
+  <linearGradient id="house" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6d7f8a"/><stop offset="1" stop-color="#3f4b53"/></linearGradient>
+  <linearGradient id="roof" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4a545b"/><stop offset="1" stop-color="#2d343a"/></linearGradient>
+  <radialGradient id="fire" cx=".5" cy=".6" r=".5"><stop offset="0" stop-color="#ffe9a0"/><stop offset=".4" stop-color="#ff8a2a"/><stop offset="1" stop-color="#ff8a2a" stop-opacity="0"/></radialGradient>
+ </defs>
+ <!-- 먼 산·숲 -->
+ <path d="M0 300 L120 250 L220 280 L340 230 L460 270 L560 240 L680 275 L800 235 L900 265 V360 H0z" fill="#7d8a86" opacity=".8"/>
+ <g fill="#4e5f4a"><ellipse cx="80" cy="340" rx="70" ry="60"/><ellipse cx="200" cy="330" rx="60" ry="70"/><ellipse cx="780" cy="330" rx="80" ry="70"/><ellipse cx="860" cy="350" rx="60" ry="60"/></g>
+ <!-- 집들 -->
+ <g><rect x="250" y="300" width="150" height="110" fill="url(#house)"/><path d="M240 302 L325 250 L410 302z" fill="url(#roof)"/><rect x="300" y="350" width="26" height="60" fill="#1f262b"/><rect x="265" y="320" width="22" height="22" fill="#9fb0bb" opacity=".6"/><rect x="350" y="320" width="22" height="22" fill="#9fb0bb" opacity=".6"/></g>
+ <g><rect x="560" y="260" width="220" height="160" fill="#5e6e78"/><path d="M548 262 L670 190 L792 262z" fill="url(#roof)"/><rect x="580" y="290" width="30" height="36" fill="#1f262b"/><rect x="650" y="290" width="30" height="36" fill="#9fb0bb" opacity=".5"/><rect x="720" y="290" width="30" height="36" fill="#1f262b"/><rect x="560" y="340" width="220" height="6" fill="#3b464e"/><g stroke="#8a98a2" stroke-width="3"><path d="M560 380 h220"/><path d="M580 346 v34 M610 346 v34 M640 346 v34 M670 346 v34 M700 346 v34 M730 346 v34 M760 346 v34"/></g></g>
+ <!-- 나무·덤불 -->
+ <g fill="#3f5236"><ellipse cx="460" cy="360" rx="50" ry="44"/><rect x="455" y="380" width="10" height="40" fill="#2e2a22"/><ellipse cx="30" cy="420" rx="60" ry="40"/><ellipse cx="880" cy="430" rx="70" ry="44"/></g>
+ <!-- 지면 -->
+ <path d="M0 420 Q300 400 600 420 T900 415 V700 H0z" fill="#5c6446"/>
+ <path d="M0 470 Q250 455 500 475 T900 470 V700 H0z" fill="#4e5739"/>
+ <path d="M200 560 Q450 545 700 560 T900 560 V700 H200z" fill="#43492f"/>
+ <!-- 흙길 -->
+ <path d="M380 700 Q420 560 520 470 L600 470 Q560 580 620 700z" fill="#6b5f44" opacity=".8"/>
+ <!-- 모래주머니 -->
+ <g fill="#8a7a58" stroke="#4e4430" stroke-width="2"><ellipse cx="300" cy="520" rx="34" ry="12"/><ellipse cx="340" cy="528" rx="34" ry="12"/><ellipse cx="320" cy="505" rx="32" ry="12"/><ellipse cx="760" cy="540" rx="36" ry="13"/><ellipse cx="800" cy="548" rx="36" ry="13"/><ellipse cx="780" cy="524" rx="34" ry="12"/></g>
+ <!-- 나무 상자 -->
+ <g fill="#8a6a3e" stroke="#4a361c" stroke-width="2"><rect x="700" y="470" width="60" height="50"/><path d="M700 470 l60 50 M760 470 l-60 50"/></g>
+ <!-- 불길·연기 -->
+ <circle cx="560" cy="505" r="40" fill="url(#fire)" opacity=".9"/>
+ <g class="smk" fill="#2b3136"><ellipse cx="560" cy="470" rx="46" ry="26" opacity=".7"/><ellipse cx="600" cy="420" rx="34" ry="20" opacity=".5"/></g>
+ <g class="smk b" fill="#cfd6db"><ellipse cx="820" cy="380" rx="50" ry="26" opacity=".6"/><ellipse cx="860" cy="330" rx="36" ry="20" opacity=".4"/></g>
+ <!-- 풀 -->
+ <g stroke="#7a8a4a" stroke-width="3" stroke-linecap="round" opacity=".8"><path d="M80 600 l6 -30 M100 600 l-4 -26 M130 610 l8 -34 M160 606 l-6 -28 M880 600 l6 -30 M850 606 l-4 -26"/></g>
+</svg>
+</div>
+
+<!-- HUD -->
+<div class="hud" aria-hidden="true">
+  <div class="map"><svg viewBox="0 0 86 86"><rect width="86" height="86" fill="#1a2128"/><g fill="#3b4752"><rect x="10" y="12" width="26" height="18"/><rect x="48" y="10" width="28" height="22"/><rect x="12" y="44" width="20" height="30"/><rect x="40" y="40" width="36" height="12"/><rect x="50" y="58" width="24" height="18"/></g><path d="M8 36 H78 M36 8 V78" stroke="#56646f" stroke-width="2"/><path d="M43 50 l5 10 h-10z" fill="#7cc46a"/><circle cx="20" cy="22" r="3" fill="#4f9ad8"/><circle cx="60" cy="66" r="3" fill="#d9483b"/><circle cx="66" cy="18" r="3" fill="#d9483b"/></svg></div>
+  <div class="round"><span class="dots l" id="dotsL"></span><b id="timer">00 : 00</b><span class="dots r" id="dotsR"></span></div>
+  <div class="score"><b id="scoreNow">0</b><small id="scoreSub">/ 12</small></div>
+  <div class="bottom">
+    <div class="ammo"><span class="mag" id="mag">12 <small>/ 12</small></span><span class="slot on">상황</span><span class="slot">판정</span></div>
+    <div class="bars"><span>HP</span><span class="bar"><i id="hp" style="width:100%"></i></span><span>AP</span><span class="bar ap"><i id="ap" style="width:0%"></i></span></div>
+  </div>
+</div>
+
+<div class="wrap">
+  <!-- 표지 -->
+  <section class="cover" id="intro">
+    <div class="title"><div class="eyebrow">KIS · LEADERSHIP ASSESSMENT</div><h1>나의 리더십은?</h1><div class="sub">회장단 네 분의 강연 스타일 중, 나와 닮은 리더를 찾는다</div></div>
+    <div class="officer">
+      <div class="ava"></div>
+      <div class="dlg"><span class="tag">교관</span><p>훈련병, 브리핑 시작한다. 상황 12개를 차례로 준다. 각 상황에서 본인에게 더 가까운 행동을 고르면 된다. 정답은 없다. 끝나면 판정 결과를 내가 직접 전달한다.</p></div>
+    </div>
+    <div class="menu">
+      <button class="btn pri" id="start">훈련 시작<small>상황 12개 · 약 2분</small></button>
+      <button class="btn" id="showAll">지휘관 명부<small>4유형 미리보기</small></button>
+    </div>
+    <p class="note">사내용 · 회장단 강연에서 받은 인상을 토대로 한 재미용 테스트. 실제 인사와 무관.</p>
+  </section>
+
+  <!-- 상황 -->
+  <section class="ops" id="quiz" hidden>
+    <div class="head"><button class="x" id="back" aria-label="표지로">✕</button><div class="name" id="worldName">SECTOR 1<small>1교장 · 에너지</small></div></div>
+    <div class="officer">
+      <div class="ava"></div>
+      <div class="dlg"><span class="tag" id="qno">교관 · 상황 1-1</span><p id="qtext"></p></div>
+    </div>
+    <div class="opts" id="opts"></div>
+    <button class="btn" id="prev">◀ 이전 상황</button>
+  </section>
+
+  <!-- 결과 -->
+  <section class="result" id="result" hidden>
+    <div class="banner">MISSION COMPLETE<small>판정 결과</small></div>
+    <div class="officer">
+      <div class="ava"></div>
+      <div class="dlg"><span class="tag">교관</span><p id="rone"></p></div>
+    </div>
+    <div class="panel hero">
+      <div class="port" id="port"></div>
+      <div class="info">
+        <span class="code" id="rcode"></span>
+        <h2 id="rname"></h2>
+        <span class="style" id="rwho"></span>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="kicker">Profile · 지휘관 특성</div>
+      <p class="desc" id="rdesc"></p>
+      <div class="tags" id="rtags"></div>
+    </div>
+    <blockquote class="quote" id="rquote"></blockquote>
+    <div class="panel">
+      <div class="kicker">Stats · 판정 근거</div>
+      <div class="stat" id="axes"></div>
+    </div>
+    <div class="pair">
+      <div class="panel p good"><div class="kicker">호흡 맞는 지휘관</div><strong id="gName"></strong><small id="gWho"></small></div>
+      <div class="panel p bad"><div class="kicker">충돌 주의 지휘관</div><strong id="bName"></strong><small id="bWho"></small></div>
+    </div>
+    <div class="actions">
+      <button class="btn pri" id="share">판정서 복사</button>
+      <button class="btn sec" id="again">다시 시작</button>
+      <button class="btn" id="toAll">지휘관 명부</button>
+    </div>
+    <div class="toast" id="toast"></div>
+  </section>
+
+  <!-- 명부 -->
+  <section class="all" id="all" hidden>
+    <div class="head"><button class="x" id="allBack" aria-label="돌아가기">✕</button><div class="name">ROSTER<small>지휘관 명부 · 4명</small></div></div>
+    <div class="grid" id="grid"></div>
+    <button class="btn pri" id="allStart">훈련 시작</button>
+  </section>
+</div>
+
+<script>
+// 축: V = 깊이·묵직함(A) vs 발산·직진(B) / H = 사람·자유(A) vs 꿈·목표(B)
+const Q = [
+  {ax:'V', t:'회식 자리. 분위기가 어색하게 조용하다. 귀관은?', a:'조용히 듣다가 한마디를 묵직하게 던진다', b:'내가 분위기를 띄운다, 잔부터 돌린다'},
+  {ax:'V', t:'중대한 결정이 하루 남았다.', a:'혼자 오래 생각하고 자료도 찾아본다', b:'감이 오면 바로 결정한다'},
+  {ax:'V', t:'후임이 귀관을 보면 받는 인상은?', a:'말은 적은데 무게가 있다', b:'에너지가 세다, 긴장되거나 신난다'},
+  {ax:'V', t:'작전이 실패했다. 그날 밤.', a:'왜 그랬는지 곱씹고 정리한다', b:'털어내고 다음 판을 준비한다'},
+  {ax:'V', t:'귀관의 말투를 한마디로.', a:'차분하고 격이 있다', b:'시원시원하고 직설적이다'},
+  {ax:'V', t:'지휘관으로서 귀관은?', a:'뒤에서 오래 받쳐주는 사람', b:'앞에서 끌고 나가는 사람'},
+  {ax:'H', t:'임무 수행에서 가장 중요한 것은?', a:'같이 일하는 사람, 분위기', b:'목표와 결과'},
+  {ax:'H', t:'5년 뒤 귀관의 모습은?', a:'좋은 동료들과 재밌게 일하는 나', b:'더 높은 자리에서 더 큰 그림을 그리는 나'},
+  {ax:'H', t:'당장 성과가 없는 임무다. 계속하겠나?', a:'사람이 남으면 된다, 계속 연락한다', b:'성과로 이어질 길을 찾아 방향을 바꾼다'},
+  {ax:'H', t:'규정이 답답하다.', a:'틀을 깨고 내 방식대로 간다', b:'목표에 맞으면 규정도 받아들인다'},
+  {ax:'H', t:'외박이다. 귀관은?', a:'같이 놀 사람을 찾는다', b:'다음 주 목표를 정리한다'},
+  {ax:'H', t:'귀관이 가장 듣고 싶은 말은?', a:'"너랑 일하면 즐겁다"', b:'"너는 결국 해내더라"'},
+];
+const LEAD = ['다음 상황이다.','상황 전달한다. 판단하라.','오래 고민하지 마라. 본인에게 가까운 쪽이면 된다.','솔직하게 고른다.','계속 간다.','마지막 교장이다. 집중하라.'];
+
+const ICON = {
+  captain:'<svg viewBox="0 0 64 64" fill="none" stroke="#e8a93a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M10 40h44l-6 10H16z"/><path d="M32 40V14"/><path d="M32 16c10 2 16 8 18 16H32z" fill="#e8a93a" opacity=".35"/><path d="M8 52q6 4 12 0t12 0 12 0 12 0"/></svg>',
+  gardener:'<svg viewBox="0 0 64 64" fill="none" stroke="#7cc46a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M32 54V30"/><path d="M32 36c-10 0-16-6-18-16 10 0 16 6 18 16z" fill="#7cc46a" opacity=".35"/><path d="M32 30c10 0 16-6 18-16-10 0-16 6-18 16z" fill="#7cc46a" opacity=".35"/><path d="M16 54h32"/></svg>',
+  surfer:'<svg viewBox="0 0 64 64" fill="none" stroke="#4f9ad8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M6 44q8-10 16 0t16 0 16 0"/><path d="M12 52q8-8 16 0t16 0 16 0"/><path d="M20 36l24-20" stroke-width="4"/><circle cx="46" cy="14" r="4" fill="#4f9ad8" opacity=".5"/></svg>',
+  fighter:'<svg viewBox="0 0 64 64" fill="none" stroke="#d9483b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M32 10l6 12 14 2-10 10 2 14-12-6-12 6 2-14-10-10 14-2z" fill="#d9483b" opacity=".35"/><path d="M32 54v-8"/></svg>',
+};
+
+const R = {
+  AB:{key:'AB',code:'TYPE 01 · 깊이 × 꿈',name:'큰 바다를 보는 선장',who:'김남구 회장님',icon:'captain',
+    desc:'꿈, 열정, 도전, 변화. 눈앞의 파도보다 수평선 너머를 본다. 말수는 적지만 한마디에 무게가 있고, 밑바닥 실무부터 다 겪은 사람의 깊이가 있다. 사람들은 이 리더가 그리는 더 큰 그림을 보고 따른다.',
+    tags:['#꿈','#도전','#더큰그림','#기품','#밑바닥부터'],
+    quote:'원양어선에서 인생의 꿈을 찾았다',
+    one:'작은 성취에 머물지 마라. 지금 그리는 그림이 충분히 큰지 한 번 더 점검하도록.',
+    good:'AA',bad:'BA'},
+  AA:{key:'AA',code:'TYPE 02 · 깊이 × 사람',name:'오래 보는 정원사',who:'유상호 부회장님',icon:'gardener',
+    desc:'부드러운 카리스마. 잘 웃고, 자신을 자주 돌아보고, 책을 많이 읽는다. 당장 결과가 없어도 미래를 보고 사람에게 계속 연락하고 투자한다. 이 리더가 심어둔 관계는 몇 년 뒤 숲이 된다.',
+    tags:['#부드러운카리스마','#성찰','#독서','#사람에게투자','#오래보기'],
+    quote:'너의 타이틀을 만들어라',
+    one:'최연소든 최장수든, 남이 준 타이틀 말고 본인이 만든 타이틀 하나를 갖도록.',
+    good:'AB',bad:'BB'},
+  BA:{key:'BA',code:'TYPE 03 · 발산 × 자유',name:'틀 깨는 서퍼',who:'정일문 부회장님',icon:'surfer',
+    desc:'호방하고 쿨하고 유쾌하다. 틀에 갇히는 걸 싫어하고, 정보다는 실력으로 말한다. 넘어져도 금방 일어나는 회복탄력성이 있고, 일도 놀이처럼 즐긴다. 바다에서 같이 놀 사람을 찾는 리더다.',
+    tags:['#호방','#즐김','#틀깨기','#실력','#회복탄력성'],
+    quote:'미숙, 성숙, 완숙',
+    one:'지금 미숙해도 된다. 즐기면서 파도를 타다 보면 완숙에 닿는다.',
+    good:'BB',bad:'AB'},
+  BB:{key:'BB',code:'TYPE 04 · 발산 × 목표',name:'독기 품은 승부사',who:'김성환 사장님',icon:'fighter',
+    desc:'야망을 숨기지 않는다. 목표를 세우고, 넘으면 더 높은 목표를 세운다. 가장 젊지만 가장 욕심이 많고, 옆에 서면 긴장감이 돈다. 이 리더의 독기는 조직 전체의 기준을 끌어올린다.',
+    tags:['#독기','#야망','#더높은목표','#긴장감','#승부'],
+    quote:'지금보다 더 높은 목표',
+    one:'욕심은 무기다. 다만 같이 뛰는 사람의 숨도 수시로 확인하도록.',
+    good:'BA',bad:'AA'},
+};
+
+const OFFICER = `<svg viewBox="0 0 84 100" aria-hidden="true"><defs><linearGradient id="cap" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2f4a3a"/><stop offset="1" stop-color="#1b2e23"/></linearGradient></defs><path d="M8 100 V76 q0 -14 14 -16 l20 -6 l20 6 q14 2 14 16 V100z" fill="#2c4536"/><path d="M34 60 l8 10 l8 -10 l-4 40 h-8z" fill="#d8d4c6"/><path d="M40 68 h4 l3 28 l-5 4 l-5 -4z" fill="#1d241c"/><g fill="#e8b94a"><rect x="14" y="66" width="12" height="4" rx="1" transform="rotate(-20 20 68)"/><rect x="58" y="66" width="12" height="4" rx="1" transform="rotate(20 64 68)"/><circle cx="66" cy="84" r="1.6"/><circle cx="66" cy="90" r="1.6"/></g><rect x="56" y="78" width="12" height="3" fill="#c9573a"/><rect x="56" y="81" width="12" height="3" fill="#4f7a3c"/><rect x="26" y="30" width="32" height="30" rx="14" fill="#f0cfa8"/><path d="M26 44 q16 -6 32 0 v-6 q-16 -8 -32 0z" fill="#2a1d12"/><g fill="#2a1d12"><circle cx="35" cy="46" r="1.8"/><circle cx="49" cy="46" r="1.8"/></g><path d="M38 54 q4 3 8 0" stroke="#8a5a3a" stroke-width="1.5" fill="none" stroke-linecap="round"/><path d="M18 36 q24 -12 48 0 l-2 6 h-44z" fill="url(#cap)"/><path d="M16 42 h52 v4 h-52z" fill="#1d241c"/><path d="M16 40 h52 v3 h-52z" fill="#e8b94a"/><ellipse cx="42" cy="26" rx="22" ry="8" fill="#2f4a3a"/><path d="M20 26 q22 -14 44 0 q-22 6 -44 0z" fill="#3a5a46"/><circle cx="42" cy="31" r="3.5" fill="#e8b94a"/></svg>`;
+const $ = id => document.getElementById(id);
+document.querySelectorAll('.ava').forEach(a => a.innerHTML = OFFICER);
+
+let i = 0, ans = [], t0 = 0, tick = null;
+const sec = s => { ['intro','quiz','result','all'].forEach(k => $(k).hidden = k !== s); window.scrollTo(0,0); };
+
+function hud(done, phase){
+  const v = ans.slice(0,6).filter(Boolean).length, h = ans.slice(6).filter(Boolean).length;
+  $('dotsL').innerHTML = Array.from({length:6},(_,k)=>`<i class="${k < v ? 'on' : ''}"></i>`).join('');
+  $('dotsR').innerHTML = Array.from({length:6},(_,k)=>`<i class="${k < h ? 'on' : ''}"></i>`).join('');
+  $('scoreNow').textContent = done; $('scoreSub').textContent = '/ 12';
+  $('mag').innerHTML = `${12 - done} <small>/ 12</small>`;
+  $('hp').style.width = (100 - done * 100 / 12 * .5) + '%';
+  $('ap').style.width = (done * 100 / 12) + '%';
+  document.querySelectorAll('.hud .slot').forEach((s,k) => s.classList.toggle('on', (phase === 'q') === (k === 0)));
+}
+function clock(){
+  clearInterval(tick);
+  const draw = () => { const s = Math.floor((Date.now() - t0) / 1000); $('timer').textContent = `${String(Math.floor(s/60)).padStart(2,'0')} : ${String(s%60).padStart(2,'0')}`; };
+  draw(); tick = setInterval(draw, 1000);
+}
+hud(0,'cover');
+
+function render(){
+  const q = Q[i];
+  const world = q.ax === 'V' ? 1 : 2, stage = q.ax === 'V' ? i+1 : i-5;
+  $('worldName').innerHTML = `SECTOR ${world}<small>${world}교장 · ${world===1?'에너지':'동력'}</small>`;
+  $('qno').textContent = `교관 · 상황 ${world}-${stage}`;
+  const lead = i === 0 ? '첫 상황이다.' : (i === 6 ? LEAD[5] : LEAD[i % 5]);
+  $('qtext').innerHTML = `${lead}<small>${q.t}</small>`;
+  const o = $('opts'); o.innerHTML = '';
+  [['A',q.a],['B',q.b]].forEach(([k,txt]) => {
+    const b = document.createElement('button'); b.className = 'opt'; b.dataset.k = k; b.textContent = txt;
+    b.onclick = () => { ans[i] = k; i++; i < Q.length ? render() : finish(); };
+    o.appendChild(b);
+  });
+  $('prev').textContent = i === 0 ? '◀ 표지로' : `◀ 이전 상황 (${Q[i-1].ax==='V'?1:2}-${i<=6?i:i-6})`;
+  hud(i,'q');
+}
+function finish(){
+  clearInterval(tick);
+  const cnt = ax => Q.reduce((n,q,k) => n + (q.ax === ax && ans[k] === 'A' ? 1 : 0), 0);
+  const v = cnt('V'), h = cnt('H');
+  const key = (v >= 4 ? 'A' : 'B') + (h >= 4 ? 'A' : 'B');
+  const r = R[key];
+  $('rone').innerHTML = `판정 결과다. 귀관은 <b>${r.who}</b>과 닮았다. ${r.name} 유형.<small>${r.one}</small>`;
+  $('port').innerHTML = `<span class="lv">CMDR</span>${ICON[r.icon]}`;
+  $('rcode').textContent = r.code; $('rname').textContent = r.who; $('rwho').textContent = r.name + ' 스타일';
+  $('rdesc').textContent = r.desc;
+  $('rtags').innerHTML = r.tags.map(t => `<span>${t}</span>`).join('');
+  $('rquote').innerHTML = `“${r.quote}”<small>${r.who} 강연 중</small>`;
+  const track = n => `<span class="track">${Array.from({length:6},(_,k)=>`<i class="${k < n ? 'f' : ''}"></i>`).join('')}</span>`;
+  $('axes').innerHTML = `
+    <div class="row"><span class="l ${v>=4?'on':''}">깊이·묵직함 ${v}</span>${track(v)}<span class="r ${v<4?'on':''}">${6-v} 발산·직진</span></div>
+    <div class="row"><span class="l ${h>=4?'on':''}">사람·자유 ${h}</span>${track(h)}<span class="r ${h<4?'on':''}">${6-h} 꿈·목표</span></div>`;
+  $('gName').textContent = R[r.good].who; $('gWho').textContent = R[r.good].name + ' 스타일';
+  $('bName').textContent = R[r.bad].who; $('bWho').textContent = R[r.bad].name + ' 스타일';
+  $('toast').textContent = '';
+  $('share').onclick = () => {
+    const txt = `[나의 리더십은?] ${r.who} — ${r.name} 스타일\n"${r.quote}"\n${r.tags.join(' ')}`;
+    const done = () => $('toast').textContent = '판정서를 복사했다.';
+    const fail = () => { $('toast').textContent = '복사가 막혀 있다. 화면을 캡처해서 공유하면 된다.'; };
+    try { navigator.clipboard.writeText(txt).then(done, fail); } catch(e){ fail(); }
+  };
+  hud(12,'r');
+  sec('result');
+}
+function drawAll(){
+  $('grid').innerHTML = Object.values(R).map(r => `<div class="panel card"><div class="ico">${ICON[r.icon]}</div><div><strong>${r.who}</strong><small>${r.name} 스타일</small></div></div>`).join('');
+}
+const go = () => { i = 0; ans = []; t0 = Date.now(); clock(); render(); sec('quiz'); };
+$('start').onclick = go; $('again').onclick = go; $('allStart').onclick = go;
+$('back').onclick = () => { clearInterval(tick); sec('intro'); };
+$('prev').onclick = () => { if (i > 0) { i--; render(); } else { clearInterval(tick); sec('intro'); } };
+$('showAll').onclick = () => { drawAll(); sec('all'); };
+$('toAll').onclick = () => { drawAll(); sec('all'); };
+$('allBack').onclick = () => sec('intro');
+</script>
+
+</body>
+</html>
