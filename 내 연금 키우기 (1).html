@@ -1,0 +1,779 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>내 연금 키우기</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Jua&family=Noto+Sans+KR:wght@500;700&display=swap">
+<style>
+  /* 구성: 뒤에 '연금 타운' 광장(SVG 풍경, 고정) → 가운데 다마고치 기기 → 기기 LCD 안에 게임 */
+  :root {
+    color-scheme: light;
+    --shell: #ff7fae; --shell-dark: #e0548b; --shell-light: #ffb3cf;
+    --face: #fff7dc; --face-line: #ffd6e4;
+    --lcd: #bdd0a2; --lcd-ink: #1f2a1a; --lcd-dim: #8c9c78;
+    --btn: #fff2a8; --btn-ink: #6a4a00;
+    --plum: #6b3a55;
+    --font-pixel: "Press Start 2P", monospace;
+    --font-cute: "Jua", "Noto Sans KR", sans-serif;
+    --font-body: "Noto Sans KR", -apple-system, system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { min-height: 100%; }
+  body { margin: 0; background: #9fdcff; color: var(--plum); font-family: var(--font-body); overflow-x: hidden; word-break: keep-all; overflow-wrap: break-word; line-break: strict; }
+
+  /* ---------- 배경: 연금 타운 ---------- */
+  .world { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+  .world svg { width: 100%; height: 100%; display: block; }
+  .drift1 { animation: drift 60s linear infinite; }
+  .drift2 { animation: drift 90s linear infinite; animation-delay: -30s; }
+  .drift3 { animation: drift 75s linear infinite; animation-delay: -55s; }
+  @keyframes drift { from { transform: translateX(-260px); } to { transform: translateX(1460px); } }
+  .bob { animation: bob 5s ease-in-out infinite; }
+  @keyframes bob { 50% { transform: translateY(-14px); } }
+  .hop { animation: hop 1.6s ease-in-out infinite; }
+  .hop.d2 { animation-delay: -.5s; } .hop.d3 { animation-delay: -1s; } .hop.d4 { animation-duration: 2.1s; }
+  @keyframes hop { 0%, 60%, 100% { transform: translateY(0); } 30% { transform: translateY(-12px); } }
+  .walk { animation: walk 14s ease-in-out infinite alternate; }
+  @keyframes walk { to { transform: translateX(140px); } }
+  .spray { stroke-dasharray: 6 8; animation: spray 1s linear infinite; }
+  @keyframes spray { to { stroke-dashoffset: -28; } }
+  .twinkle { animation: twinkle 2.4s ease-in-out infinite; }
+  .twinkle:nth-child(2n) { animation-delay: -1.2s; } .twinkle:nth-child(3n) { animation-delay: -.6s; }
+  @keyframes twinkle { 50% { opacity: .25; } }
+
+  /* ---------- 앞: 기기 ---------- */
+  .wrap {
+    position: relative; z-index: 1; min-height: 100vh;
+    display: grid; justify-items: center; align-content: start; gap: 14px;
+    padding: 18px max(16px, env(safe-area-inset-right, 0px)) 28px max(16px, env(safe-area-inset-left, 0px));
+  }
+  .banner {
+    font-family: var(--font-cute); font-size: 22px; color: #fff; letter-spacing: .02em;
+    background: linear-gradient(#ff8fb8, #f0679c); padding: 6px 26px 8px; border-radius: 999px;
+    box-shadow: 0 4px 0 #c94a7e, 0 10px 18px rgba(80,40,90,.18);
+    position: relative; text-shadow: 0 2px 0 #c94a7e;
+  }
+  .banner::before, .banner::after { content: "★"; position: absolute; top: -10px; font-size: 18px; color: #ffe066; text-shadow: 0 2px 0 #e0a800; }
+  .banner::before { left: -8px; transform: rotate(-18deg); } .banner::after { right: -8px; transform: rotate(18deg); }
+
+  .device {
+    position: relative; width: 100%; max-width: 392px; margin-top: 18px;
+    background:
+      radial-gradient(circle at 18% 22%, rgba(255,255,255,.55) 0 2px, transparent 3px) 0 0 / 34px 34px,
+      linear-gradient(165deg, var(--shell-light), var(--shell) 38%, var(--shell-dark));
+    border-radius: 50% 50% 46% 46% / 38% 38% 36% 36%;
+    padding: 46px 22px 30px;
+    box-shadow:
+      0 24px 50px rgba(90,30,80,.32), 0 6px 0 #c4447a,
+      inset 0 -10px 0 rgba(0,0,0,.10), inset 0 8px 0 rgba(255,255,255,.4);
+    display: grid; gap: 14px;
+  }
+  .device::before { /* 반사광 */
+    content: ""; position: absolute; left: 6%; top: 16%; width: 7%; height: 22%;
+    border-radius: 50%; background: rgba(255,255,255,.5); filter: blur(1px); transform: rotate(14deg); pointer-events: none;
+  }
+  .ring { /* 키링 고리 */
+    position: absolute; top: -26px; left: 50%; width: 46px; height: 46px; transform: translateX(-50%);
+    border: 8px solid #c9b6ff; border-radius: 50%; box-shadow: inset 0 2px 0 rgba(255,255,255,.6), 0 3px 0 #9d86e6; z-index: -1;
+  }
+  .logo { text-align: center; display: grid; gap: 4px; position: relative; }
+  .logo .pix { font-family: var(--font-pixel); font-size: 10px; color: #fff; letter-spacing: .1em; text-shadow: 0 2px 0 var(--shell-dark); }
+  .logo .ko { font-family: var(--font-cute); font-size: 20px; color: #fff; text-shadow: 0 2px 0 var(--shell-dark), 0 0 12px rgba(255,255,255,.5); }
+
+  .face { /* LCD를 감싸는 페이스플레이트 */
+    background:
+      radial-gradient(circle, var(--face-line) 1.6px, transparent 2px) 0 0 / 16px 16px,
+      var(--face);
+    border-radius: 26px; padding: 10px 10px 8px;
+    box-shadow: inset 0 3px 0 rgba(255,255,255,.8), inset 0 -3px 0 rgba(200,120,150,.25), 0 3px 0 rgba(150,40,90,.25);
+    display: grid; gap: 8px;
+  }
+  .icons { display: flex; justify-content: space-around; }
+  .ico { width: 26px; height: 26px; color: #d9a9bf; transition: color .2s, transform .2s; }
+  .ico svg { width: 100%; height: 100%; display: block; fill: currentColor; }
+  .ico.on { color: #ff4f93; transform: scale(1.15); filter: drop-shadow(0 0 4px rgba(255,79,147,.5)); }
+  .ico.warn { color: #ff4f93; animation: blink 1s steps(2) infinite; }
+  @keyframes blink { 50% { opacity: .2; } }
+
+  .screen {
+    background: var(--lcd); border: 6px solid #4a3340; border-radius: 16px;
+    box-shadow: inset 0 0 0 3px #a6b98c, inset 0 4px 14px rgba(0,0,0,.25);
+    padding: 12px 12px 10px; color: var(--lcd-ink); min-height: 360px;
+    display: grid; grid-template-rows: auto 1fr auto; gap: 8px;
+    position: relative; overflow: hidden;
+  }
+  .screen::after { content: ""; position: absolute; inset: 0; pointer-events: none;
+    background: repeating-linear-gradient(0deg, rgba(0,0,0,.06) 0 1px, transparent 1px 3px); }
+  .hud { display: flex; justify-content: space-between; align-items: center; font-size: 12px; font-weight: 700; }
+  .hud .hearts { font-family: var(--font-pixel); font-size: 9px; letter-spacing: 2px; }
+  .stage { display: grid; gap: 7px; align-content: start; }
+  .pet { display: grid; place-items: center; height: 92px; }
+  .sprite { display: grid; grid-template-columns: repeat(12, 7px); }
+  .sprite i { width: 7px; height: 7px; display: block; }
+  .sprite i.p { background: var(--lcd-ink); }
+  .sprite i.s { background: var(--lcd-dim); }
+  .bounce { animation: bounce 1.2s steps(2) infinite; }
+  @keyframes bounce { 50% { transform: translateY(-4px); } }
+  .shake { animation: shake .4s steps(4) 2; }
+  @keyframes shake { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+  .say { font-size: 14px; font-weight: 700; text-align: center; line-height: 1.4; text-wrap: balance; }
+  .q { font-size: 14.5px; font-weight: 700; line-height: 1.45; text-wrap: pretty; border-top: 2px dashed var(--lcd-dim); padding-top: 8px; }
+  .q small { display: block; font-family: var(--font-pixel); font-size: 8px; margin-bottom: 6px; opacity: .8; }
+  .opts { display: grid; gap: 5px; font-size: 13px; font-weight: 500; line-height: 1.35; }
+  .opts div { display: flex; gap: 8px; align-items: flex-start; }
+  .opts b { font-family: var(--font-pixel); font-size: 9px; padding-top: 3px; flex: none; }
+  .log { display: grid; gap: 4px; font-size: 12.5px; border-top: 2px dashed var(--lcd-dim); padding-top: 8px; line-height: 1.4; }
+  .log .row { display: flex; justify-content: space-between; gap: 8px; }
+  .log .big { font-weight: 700; font-size: 13.5px; }
+  .gauge { font-size: 11px; font-weight: 700; display: flex; gap: 8px; align-items: center; }
+  .gauge .track { flex: 1; height: 10px; border: 2px solid var(--lcd-ink); display: flex; gap: 1px; padding: 1px; }
+  .gauge .track i { flex: 1; }
+  .gauge .track i.on { background: var(--lcd-ink); }
+  .end .title { font-size: 16px; font-weight: 700; text-align: center; }
+  .end .sub { font-size: 12px; text-align: center; font-weight: 700; }
+  .end .desc { font-size: 13px; text-align: center; line-height: 1.45; }
+  .reveal { margin: 0; padding: 8px 0 0; list-style: none; display: grid; gap: 5px; font-size: 12px; line-height: 1.45; border-top: 2px dashed var(--lcd-dim); }
+  .reveal li::before { content: "※ "; font-weight: 700; }
+
+  .buttons { display: flex; justify-content: center; gap: 20px; padding-top: 4px; }
+  .pbtn {
+    width: 64px; height: 64px; border-radius: 50%; border: 0; cursor: pointer;
+    background: radial-gradient(circle at 35% 30%, #fffdf0, var(--btn) 55%, #ecd06a);
+    box-shadow: 0 6px 0 #c4a03a, 0 10px 14px rgba(90,30,60,.25), inset 0 -3px 0 rgba(0,0,0,.06);
+    font-family: var(--font-pixel); font-size: 14px; color: var(--btn-ink);
+    transition: transform .08s, box-shadow .08s;
+  }
+  .buttons .pbtn:nth-child(2) { transform: translateY(10px); }
+  .buttons .pbtn:nth-child(2):active, .buttons .pbtn:nth-child(2).press { transform: translateY(15px); }
+  .pbtn:active, .pbtn.press { transform: translateY(5px); box-shadow: 0 1px 0 #c4a03a, 0 3px 6px rgba(0,0,0,.2); }
+  .pbtn:focus-visible, .ff:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+  .pbtn:disabled, .ff:disabled { opacity: .5; cursor: default; }
+  .ff {
+    justify-self: center; margin-top: 8px; border: 0; cursor: pointer; border-radius: 999px;
+    padding: 8px 18px; background: #6b3a55; color: #fff;
+    font-family: var(--font-body); font-size: 12px; font-weight: 700;
+    box-shadow: 0 3px 0 #43233a;
+  }
+  .ff:active { transform: translateY(2px); box-shadow: 0 1px 0 #43233a; }
+  .hint { text-align: center; font-size: 12px; color: #fff; font-weight: 700; text-shadow: 0 1px 0 var(--shell-dark); }
+  .foot {
+    margin: 0; font-size: 12px; color: var(--plum); text-align: center; max-width: 392px;
+    background: rgba(255,255,255,.82); padding: 8px 16px; border-radius: 999px;
+    box-shadow: 0 4px 12px rgba(80,40,90,.12);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .bounce, .shake, .drift1, .drift2, .drift3, .bob, .hop, .walk, .spray, .twinkle, .ico.warn { animation: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== 배경: 연금 타운 광장 ===== -->
+<div class="world" aria-hidden="true">
+<svg viewBox="0 0 1200 800" preserveAspectRatio="xMidYMax slice">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7ccbff"/><stop offset=".7" stop-color="#cdeeff"/><stop offset="1" stop-color="#e9f8ff"/></linearGradient>
+    <radialGradient id="sun"><stop offset="0" stop-color="#fffbe0"/><stop offset=".55" stop-color="#fff3a8" stop-opacity=".9"/><stop offset="1" stop-color="#fff3a8" stop-opacity="0"/></radialGradient>
+    <g id="cloud"><circle cx="0" cy="0" r="34"/><circle cx="40" cy="-18" r="44"/><circle cx="88" cy="-4" r="36"/><circle cx="120" cy="10" r="26"/><rect x="-30" y="0" width="170" height="34" rx="17"/></g>
+    <g id="tree"><rect x="-5" y="0" width="10" height="34" rx="4" fill="#b98457"/><circle cy="-10" r="26" fill="#7fd48a"/><circle cx="-14" cy="0" r="18" fill="#6cc779"/><circle cx="15" cy="-2" r="18" fill="#8fe09a"/><circle cx="-6" cy="-20" r="7" fill="#b9f0bf"/></g>
+  </defs>
+
+  <rect width="1200" height="800" fill="url(#sky)"/>
+  <circle cx="1040" cy="110" r="110" fill="url(#sun)"/>
+
+  <!-- 구름 -->
+  <g fill="#fff" opacity=".95">
+    <g class="drift1"><use href="#cloud" x="0" y="120"/></g>
+    <g class="drift2"><use href="#cloud" x="0" y="230" transform="scale(.7)"/></g>
+    <g class="drift3"><use href="#cloud" x="0" y="80" transform="scale(1.15)"/></g>
+  </g>
+
+  <!-- 열기구 -->
+  <g class="bob">
+    <g transform="translate(905 150)">
+      <path d="M0 -60 C40 -60 56 -30 56 -6 C56 24 22 42 12 62 H-12 C-22 42 -56 24 -56 -6 C-56 -30 -40 -60 0 -60Z" fill="#ffd166"/>
+      <path d="M0 -60 C18 -60 24 -30 24 -6 C24 24 10 42 6 62 H-6 C-10 42 -24 24 -24 -6 C-24 -30 -18 -60 0 -60Z" fill="#ff8fb8"/>
+      <path d="M-56 -6 H56" stroke="#fff" stroke-width="5" opacity=".7"/>
+      <path d="M-10 62 L-12 80 M10 62 L12 80" stroke="#8a5a3c" stroke-width="2"/>
+      <rect x="-16" y="80" width="32" height="20" rx="5" fill="#c98a5a"/>
+      <text x="0" y="-12" text-anchor="middle" font-family="Jua, sans-serif" font-size="18" fill="#fff">₩</text>
+    </g>
+  </g>
+
+  <!-- 언덕 -->
+  <ellipse cx="200" cy="500" rx="360" ry="90" fill="#a8e6b0"/>
+  <ellipse cx="1000" cy="505" rx="380" ry="95" fill="#9fe0a8"/>
+  <ellipse cx="620" cy="510" rx="300" ry="70" fill="#b5ecbc"/>
+
+  <!-- 건물들 -->
+  <!-- 시계탑 -->
+  <g transform="translate(70 0)">
+    <rect x="0" y="250" width="74" height="250" rx="8" fill="#d7c4ff"/>
+    <path d="M-8 254 L37 196 L82 254Z" fill="#ff8fb8"/>
+    <circle cx="37" cy="300" r="22" fill="#fff"/><circle cx="37" cy="300" r="22" fill="none" stroke="#a88be8" stroke-width="4"/>
+    <path d="M37 300 V286 M37 300 H48" stroke="#6b3a55" stroke-width="3" stroke-linecap="round"/>
+    <rect x="20" y="350" width="34" height="40" rx="17" fill="#fff" opacity=".8"/>
+    <rect x="22" y="440" width="30" height="60" rx="15" fill="#a88be8"/>
+  </g>
+  <!-- 적금 베이커리 -->
+  <g transform="translate(170 0)">
+    <rect x="0" y="370" width="170" height="130" rx="10" fill="#ffd6e6"/>
+    <path d="M-10 372 Q85 318 180 372Z" fill="#ff7fae"/>
+    <g>
+      <path d="M0 372 h170 v26 h-170z" fill="#fff"/>
+      <path d="M0 372 h21 v26 q-10 10 -21 0z M42 372 h21 v26 q-10 10 -21 0z M84 372 h21 v26 q-10 10 -21 0z M126 372 h21 v26 q-10 10 -21 0z" fill="#ff5f9a"/>
+      <path d="M21 398 q11 10 21 0 M63 398 q11 10 21 0 M105 398 q11 10 21 0 M147 398 q11 10 23 0" fill="#fff"/>
+    </g>
+    <rect x="24" y="420" width="52" height="40" rx="8" fill="#bfe8ff"/>
+    <rect x="98" y="430" width="44" height="70" rx="20" fill="#d98aa8"/>
+    <rect x="30" y="338" width="110" height="26" rx="13" fill="#fff"/>
+    <text x="85" y="357" text-anchor="middle" font-family="Jua, sans-serif" font-size="16" fill="#e0548b">적금 베이커리</text>
+  </g>
+  <!-- 버섯집 -->
+  <g transform="translate(360 0)">
+    <rect x="20" y="420" width="60" height="80" rx="14" fill="#fff4dc"/>
+    <path d="M-12 430 C-12 360 112 360 112 430Z" fill="#ff6b6b"/>
+    <circle cx="20" cy="400" r="9" fill="#fff"/><circle cx="56" cy="384" r="12" fill="#fff"/><circle cx="88" cy="408" r="8" fill="#fff"/>
+    <rect x="38" y="452" width="24" height="48" rx="12" fill="#c98a5a"/>
+  </g>
+  <!-- 연금이네 회사 (가운데) -->
+  <g transform="translate(510 0)">
+    <rect x="0" y="230" width="180" height="270" rx="12" fill="#bfe1ff"/>
+    <rect x="0" y="230" width="180" height="22" rx="10" fill="#8cc4f2"/>
+    <g fill="#fff">
+      <rect x="20" y="270" width="30" height="26" rx="6"/><rect x="75" y="270" width="30" height="26" rx="6"/><rect x="130" y="270" width="30" height="26" rx="6"/>
+      <rect x="20" y="315" width="30" height="26" rx="6"/><rect x="75" y="315" width="30" height="26" rx="6"/><rect x="130" y="315" width="30" height="26" rx="6"/>
+      <rect x="20" y="360" width="30" height="26" rx="6"/><rect x="75" y="360" width="30" height="26" rx="6"/><rect x="130" y="360" width="30" height="26" rx="6"/>
+      <rect x="20" y="405" width="30" height="26" rx="6"/><rect x="130" y="405" width="30" height="26" rx="6"/>
+    </g>
+    <rect x="66" y="440" width="48" height="60" rx="8" fill="#6aa8de"/>
+    <rect x="30" y="196" width="120" height="30" rx="15" fill="#fff"/>
+    <text x="90" y="217" text-anchor="middle" font-family="Jua, sans-serif" font-size="17" fill="#3b7fc4">연금이네 회사</text>
+  </g>
+  <!-- 연금은행 -->
+  <g transform="translate(760 0)">
+    <path d="M30 330 Q90 250 150 330Z" fill="#9ee8d0"/>
+    <path d="M90 262 v-30" stroke="#6b3a55" stroke-width="3"/><path d="M90 232 l22 8 -22 8z" fill="#ff7fae"/>
+    <rect x="10" y="328" width="160" height="22" rx="6" fill="#fff7dc"/>
+    <rect x="18" y="350" width="144" height="150" fill="#fffaf0"/>
+    <g fill="#ffe3a8"><rect x="30" y="360" width="16" height="140" rx="6"/><rect x="64" y="360" width="16" height="140" rx="6"/><rect x="100" y="360" width="16" height="140" rx="6"/><rect x="134" y="360" width="16" height="140" rx="6"/></g>
+    <rect x="0" y="488" width="180" height="14" rx="6" fill="#f0d9b5"/>
+    <rect x="40" y="296" width="100" height="26" rx="13" fill="#fff"/>
+    <text x="90" y="315" text-anchor="middle" font-family="Jua, sans-serif" font-size="16" fill="#2fa58a">연금은행</text>
+  </g>
+  <!-- 둥근 상점 -->
+  <g transform="translate(955 0)">
+    <rect x="0" y="360" width="90" height="140" rx="40" fill="#ffe680"/>
+    <path d="M-6 372 Q45 300 96 372Z" fill="#ffa94d"/>
+    <circle cx="45" cy="410" r="20" fill="#fff"/><text x="45" y="418" text-anchor="middle" font-family="Jua, sans-serif" font-size="20" fill="#ffa94d">%</text>
+    <rect x="28" y="450" width="34" height="50" rx="17" fill="#e8a33a"/>
+  </g>
+  <!-- 파란 지붕 집 -->
+  <g transform="translate(1060 0)">
+    <rect x="0" y="380" width="130" height="120" rx="8" fill="#fff"/>
+    <path d="M-12 386 L65 320 L142 386Z" fill="#6fa8ff"/>
+    <rect x="18" y="410" width="34" height="34" rx="8" fill="#bfe8ff"/><rect x="78" y="410" width="34" height="34" rx="8" fill="#bfe8ff"/>
+    <rect x="48" y="450" width="34" height="50" rx="16" fill="#6fa8ff"/>
+  </g>
+  <use href="#tree" x="160" y="466"/><use href="#tree" x="470" y="470"/><use href="#tree" x="730" y="470"/><use href="#tree" x="1055" y="470"/>
+
+  <!-- 광장 바닥 -->
+  <rect x="0" y="496" width="1200" height="304" fill="#f6dcbc"/>
+  <g id="tiles"></g>
+  <rect x="0" y="490" width="1200" height="14" rx="7" fill="#ffd0e0"/>
+
+  <!-- 분수 -->
+  <g transform="translate(300 590)">
+    <ellipse cx="0" cy="34" rx="120" ry="30" fill="#e6c9a8"/>
+    <ellipse cx="0" cy="24" rx="116" ry="28" fill="#bfe6ff" stroke="#fff" stroke-width="6"/>
+    <rect x="-12" y="-46" width="24" height="70" rx="8" fill="#fff"/>
+    <ellipse cx="0" cy="-46" rx="46" ry="12" fill="#fff"/><ellipse cx="0" cy="-48" rx="38" ry="8" fill="#bfe6ff"/>
+    <g fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round">
+      <path class="spray" d="M0 -54 C-10 -110 -60 -100 -80 -10"/>
+      <path class="spray" d="M0 -54 C10 -110 60 -100 80 -10"/>
+      <path class="spray" d="M0 -54 V-112"/>
+    </g>
+  </g>
+
+  <!-- 주민들 (오리지널) -->
+  <!-- 돼지저금통 -->
+  <g class="walk"><g class="hop"><g transform="translate(130 700)">
+    <ellipse cx="0" cy="40" rx="40" ry="8" fill="#000" opacity=".08"/>
+    <path d="M-30 -24 l-8 -20 l20 10z M18 -26 l14 -18 l2 22z" fill="#ff9cc0"/>
+    <ellipse cx="0" cy="0" rx="46" ry="38" fill="#ffb3cf"/>
+    <rect x="-14" y="-36" width="28" height="6" rx="3" fill="#e0548b"/>
+    <ellipse cx="30" cy="6" rx="14" ry="11" fill="#ff8fb8"/><circle cx="26" cy="6" r="2.5" fill="#c94a7e"/><circle cx="34" cy="6" r="2.5" fill="#c94a7e"/>
+    <circle cx="4" cy="-8" r="5" fill="#3a2a33"/><circle cx="5.5" cy="-9.5" r="1.6" fill="#fff"/>
+    <ellipse cx="-12" cy="8" rx="7" ry="4" fill="#ff8fb8" opacity=".7"/>
+    <rect x="-28" y="28" width="12" height="12" rx="5" fill="#ff8fb8"/><rect x="10" y="28" width="12" height="12" rx="5" fill="#ff8fb8"/>
+  </g></g></g>
+  <!-- 동전이 -->
+  <g class="hop d2"><g transform="translate(1010 640)">
+    <ellipse cx="0" cy="44" rx="30" ry="7" fill="#000" opacity=".08"/>
+    <path d="M-34 4 q-16 -14 -10 -30 M34 4 q16 -14 12 -32" stroke="#e0a800" stroke-width="6" fill="none" stroke-linecap="round"/>
+    <circle r="36" fill="#ffd84d"/><circle r="28" fill="none" stroke="#f0b800" stroke-width="4"/>
+    <circle cx="-10" cy="-6" r="4.5" fill="#3a2a33"/><circle cx="10" cy="-6" r="4.5" fill="#3a2a33"/>
+    <path d="M-7 8 q7 7 14 0" stroke="#3a2a33" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <ellipse cx="-18" cy="6" rx="5" ry="3" fill="#ff9c9c" opacity=".7"/><ellipse cx="18" cy="6" rx="5" ry="3" fill="#ff9c9c" opacity=".7"/>
+    <rect x="-16" y="34" width="10" height="10" rx="4" fill="#e0a800"/><rect x="6" y="34" width="10" height="10" rx="4" fill="#e0a800"/>
+  </g></g>
+  <!-- 넥타이 방울이 (회사원) -->
+  <g class="hop d3"><g transform="translate(880 735)">
+    <ellipse cx="0" cy="40" rx="32" ry="7" fill="#000" opacity=".08"/>
+    <path d="M0 -50 C26 -18 38 0 38 14 C38 32 22 40 0 40 C-22 40 -38 32 -38 14 C-38 0 -26 -18 0 -50Z" fill="#9ee8d0"/>
+    <circle cx="-11" cy="8" r="4.5" fill="#3a2a33"/><circle cx="11" cy="8" r="4.5" fill="#3a2a33"/>
+    <path d="M-5 18 q5 4 10 0" stroke="#3a2a33" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <path d="M0 24 l-6 6 l6 10 l6 -10z" fill="#ff5f9a"/>
+    <rect x="30" y="18" width="26" height="18" rx="4" fill="#8a5a3c"/><rect x="38" y="13" width="10" height="6" rx="2" fill="none" stroke="#8a5a3c" stroke-width="2.5"/>
+  </g></g>
+  <!-- 예금 달팽이 -->
+  <g class="hop d4"><g transform="translate(1100 775)">
+    <ellipse cx="0" cy="22" rx="56" ry="7" fill="#000" opacity=".08"/>
+    <path d="M-50 20 h90 q14 0 14 -14 v-22 q0 -10 -8 -10 q-8 0 -8 10 v8 h-88z" fill="#fff0c8"/>
+    <circle cx="-6" cy="-14" r="32" fill="#ffa94d"/>
+    <path d="M-6 -14 m0 -20 a20 20 0 1 1 -18 12 a12 12 0 1 1 12 -6" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round"/>
+    <circle cx="48" cy="-22" r="4" fill="#3a2a33"/>
+  </g></g>
+  <!-- 알 연금이 -->
+  <g class="hop d4"><g transform="translate(745 610)">
+    <ellipse cx="0" cy="34" rx="26" ry="6" fill="#000" opacity=".08"/>
+    <ellipse cx="0" cy="0" rx="26" ry="34" fill="#fffaf0"/>
+    <path d="M-26 -6 l9 -8 l8 8 l9 -8 l9 8 l8 -8 l9 8" stroke="#ffb3cf" stroke-width="4" fill="none" stroke-linejoin="round"/>
+    <circle cx="-8" cy="6" r="3.5" fill="#3a2a33"/><circle cx="8" cy="6" r="3.5" fill="#3a2a33"/>
+    <ellipse cx="-15" cy="14" rx="4" ry="2.5" fill="#ff9c9c" opacity=".7"/><ellipse cx="15" cy="14" rx="4" ry="2.5" fill="#ff9c9c" opacity=".7"/>
+  </g></g>
+
+  <!-- 반짝이 -->
+  <g>
+    <rect class="twinkle" x="420" y="150" width="10" height="10" fill="#ff8fb8" transform="rotate(20 425 155)"/>
+    <rect class="twinkle" x="700" y="110" width="8" height="8" fill="#ffd84d" transform="rotate(35 704 114)"/>
+    <rect class="twinkle" x="280" y="200" width="9" height="9" fill="#9ee8d0"/>
+    <rect class="twinkle" x="820" y="300" width="8" height="8" fill="#c9b6ff" transform="rotate(15 824 304)"/>
+    <rect class="twinkle" x="120" y="180" width="10" height="10" fill="#ffd84d" transform="rotate(40 125 185)"/>
+    <rect class="twinkle" x="1100" y="250" width="9" height="9" fill="#ff8fb8"/>
+    <rect class="twinkle" x="560" y="160" width="7" height="7" fill="#fff"/>
+    <rect class="twinkle" x="1000" y="330" width="7" height="7" fill="#fff"/>
+  </g>
+</svg>
+</div>
+
+<!-- ===== 앞: 다마고치 기기 ===== -->
+<div class="wrap">
+  <div class="banner">연금 타운</div>
+  <div class="device">
+    <div class="ring"></div>
+    <div class="logo"><span class="pix">PENSION-GOTCHI</span><span class="ko">내 연금 키우기</span></div>
+    <div class="face">
+      <div class="icons">
+        <span class="ico" id="i-case" title="회사"><svg viewBox="0 0 16 16"><path fill-rule="evenodd" d="M5 2h6v3h3.5v9h-13V5H5zM6.5 3.5V5h3V3.5z"/></svg></span>
+        <span class="ico" id="i-coin" title="통장"><svg viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8 1.5a6.5 6.5 0 1 1 0 13 6.5 6.5 0 0 1 0-13zM4.5 5.5h1.4l.9 3.6.9-2.6h.6l.9 2.6.9-3.6h1.4l-1.6 5.5H9.3L8 7.6 6.7 11H5.4z"/></svg></span>
+        <span class="ico" id="i-heart" title="멘탈"><svg viewBox="0 0 16 16"><path d="M8 14.5L2 8.6A3.6 3.6 0 0 1 8 3.6a3.6 3.6 0 0 1 6 5z"/></svg></span>
+        <span class="ico" id="i-chart" title="경기"><svg viewBox="0 0 16 16"><path d="M1.5 13h13v1.5h-13zM2.5 9h2.5v4H2.5zM6.75 6h2.5v7h-2.5zM11 2.5h2.5V13H11z"/></svg></span>
+      </div>
+      <div class="screen">
+        <div class="hud"><span id="hudLeft">신입 연금이</span><span class="hearts" id="hearts">♥♥♥</span></div>
+        <div class="stage" id="stage"></div>
+        <div class="gauge"><span id="gLabel">승진까지</span><div class="track" id="track"></div><span id="kg">5kg</span></div>
+      </div>
+      <div class="icons">
+        <span class="ico" id="i-bulb" title="시작"><svg viewBox="0 0 16 16"><path d="M8 1.5a4.5 4.5 0 0 1 2.8 8V11.5H5.2V9.5A4.5 4.5 0 0 1 8 1.5zM5.5 12.5h5V14h-5z"/></svg></span>
+        <span class="ico" id="i-fast" title="빨리감기"><svg viewBox="0 0 16 16"><path d="M1.5 3.5l6.5 4.5-6.5 4.5zM8 3.5l6.5 4.5L8 12.5z"/></svg></span>
+        <span class="ico" id="i-gift" title="은퇴"><svg viewBox="0 0 16 16"><path fill-rule="evenodd" d="M1.5 6h13v3h-13zM2.5 9.5h11v5h-11zM7 6h2v8.5H7zM4.5 2c1.5-.5 3.3.8 3.5 3.5C5.5 5.4 4 4 4.5 2zM11.5 2c.5 2-1 3.4-3.5 3.5.2-2.7 2-4 3.5-3.5z"/></svg></span>
+        <span class="ico" id="i-save" title="저장"><svg viewBox="0 0 16 16"><path fill-rule="evenodd" d="M2 2h9.5L14 4.5V14H2zM4.5 3.5v3h6v-3zM4.5 9v3.5h7V9z"/></svg></span>
+      </div>
+    </div>
+    <div class="buttons">
+      <button class="pbtn" id="bA">A</button>
+      <button class="pbtn" id="bB">B</button>
+      <button class="pbtn" id="bC">C</button>
+    </div>
+    <button class="ff" id="bF">▶▶ 5년 빨리감기</button>
+    <div class="hint" id="hint"></div>
+  </div>
+  <p class="foot">연금이는 이 브라우저에 저장돼요. 다음에 와도 이어서 키울 수 있어요.</p>
+</div>
+
+<script>
+/* ===== 스프라이트 (12x12) ===== */
+const SPRITES = {
+  egg: ["............","....pppp....","...p....p...","..p..s...p..","..p.s....p..",".p........p.",".p........p.",".p...s....p.","..p......p..","..p......p..","...pppppp...","............"],
+  chick: ["............","....pppp....","...p....p...","..p.p..p.p..","..p......p..","pp.p.pp..p..","..p.ppp.p...","...pppp.....","..p.s..s.p..","..p......p..","...pppppp...","....p..p...."],
+  chicken: ["....ss......","...p.sp.....","..p.p..p....","pp.p...p....","..p....pppp.","..p.s.....p.","..p..s....p.","...p......p.","...p.....p..","....ppppp...","....p..p....","...pp..pp..."],
+  phoenix: ["s....pppp...",".s..p.p..p..","..s.p....p..","pp..p.ss.p.s","..pp.p..p.s.","s...p....ps.",".s..p.ss.p..","..s.p....p.s","...s.ppp..s.","....p...ps..","...p.....p..","..pp.....pp."],
+};
+const STAGES = [
+  { key: "egg", name: "인턴" }, { key: "chick", name: "사원" },
+  { key: "chicken", name: "팀장" }, { key: "phoenix", name: "임원" },
+];
+const TH = [0, 40, 150, 450];             // 승진 기준 몸무게(kg)
+const stageOf = e => e >= TH[3] ? 3 : e >= TH[2] ? 2 : e >= TH[1] ? 1 : 0;
+const START_AGE = 25, END_AGE = 65;
+
+/* ===== 숨은 규칙 =====
+   몸무게 1kg = 연금 잔고 100만 원.
+   alloc: s(안전) / g(성장) / r(고위험) 비중. 매년 경기에 따라 몸무게가 불어나거나 줄어듦.
+   habit: 매년 자동으로 쌓이는 양(저축 습관). 퇴직금 몫 3kg은 기본.  */
+const WEATHER = [
+  { k: "boom",  icon: "☀", name: "호황",   p: .20, r: { s: .02, g: .22,  r: .70 } },
+  { k: "norm",  icon: "☁", name: "평년",   p: .45, r: { s: .02, g: .09,  r: .06 } },
+  { k: "slump", icon: "☂", name: "불황",   p: .25, r: { s: .02, g: -.06, r: -.30 } },
+  { k: "crash", icon: "⚡", name: "대폭락", p: .10, r: { s: .01, g: -.20, r: -.60 } },
+];
+
+const rnd = () => Math.random();
+const pick = arr => arr[Math.floor(rnd() * arr.length)];
+function shift(S, target, amt) { for (const k of ["s", "g", "r"]) S.alloc[k] = S.alloc[k] * (1 - amt) + (k === target ? amt : 0); }
+const addItem = (S, it) => { if (!S.items.includes(it)) S.items.push(it); };
+const hp = (S, d) => { S.hearts = Math.max(0, Math.min(3, S.hearts + d)); };
+const habit = (S, d) => { S.habit = Math.max(0, Math.min(4, S.habit + d)); };
+const cut = (S, f) => { S.exp = Math.max(1, S.exp * (1 - f)); };
+
+/* ===== 회사 사건 카드 (정답 숨김) ===== */
+const EVENTS = [
+  { q: "연말 성과급 400이 꽂혔다!", o: [
+    ["나에게 주는 선물, 명품 지갑", S => { hp(S, 1); addItem(S, "명품 지갑"); return "반짝반짝, 기분 최고!"; }],
+    ["연금이 통장에 쏙 넣는다", S => { S.exp += 4; return "음… 든든한 것 같기도?"; }],
+    ["선배 따라 테마주 한 방", S => { shift(S, "r", .1); if (rnd() < .4) { S.exp += 12; return "떡상! 세 배가 됐다!!"; } hp(S, -1); return "…다음 날 상한가가 하한가가 됐다"; }],
+  ]},
+  { q: "옆자리 선배가 \"이건 무조건 간다\"며 종목을 속삭인다.", o: [
+    ["영혼까지 끌어서 몰빵", S => { shift(S, "r", .5); return "가즈아…!"; }],
+    ["살짝만 따라 탄다", S => { shift(S, "r", .15); return "발만 담가볼게요"; }],
+    ["못 들은 척 키보드만 친다", S => { shift(S, "s", .2); return "타닥타닥. 아무것도 못 들었다"; }],
+  ]},
+  { q: "팀장님: \"퇴직금, 네가 굴릴래? 회사가 맡아줄까?\"", o: [
+    ["제가 굴릴게요", S => { shift(S, "g", .4); S.flags.dc = 1; return "직접 운전대를 잡았다!"; }],
+    ["회사가 알아서 해주세요", S => { shift(S, "s", .3); hp(S, 1); S.flags.db = 1; return "편-안"; }],
+    ["반은 제가, 반은 회사가", S => { shift(S, "g", .2); shift(S, "s", .1); return "밸런스 게임 승리?"; }],
+  ]},
+  { q: "책상 서랍 깊숙이 '절대 열지 마' 봉투를 발견했다.", o: [
+    ["열어서 오마카세 간다", S => { cut(S, .3); hp(S, 2); addItem(S, "오마카세 영수증"); S.flags.withdraw++; return "참치 뱃살… 행복해…"; }],
+    ["못 본 걸로 하고 닫는다", S => "…근데 뭐가 들었을까"],
+    ["오히려 봉투에 더 넣는다", S => { habit(S, 1); hp(S, -1); return "점심은 편의점 김밥으로…"; }],
+  ]},
+  { q: "야근 3주째. 연금이 눈 밑이 까맣다.", o: [
+    ["연차 쓰고 발리로 튄다", S => { hp(S, 2); S.skip = true; addItem(S, "발리 기념 자석"); return "파도 소리 들으며 힐링"; }],
+    ["버틴다, 이것도 커리어다", S => { hp(S, -1); S.exp += 2; return "커피 다섯 잔째…"; }],
+    ["사직서를 품에 넣는다", S => { if (rnd() < .5) { habit(S, 1); hp(S, 1); return "이직 성공! 연봉 점프!"; } S.skip = true; hp(S, -1); return "1년 백수 생활 시작…"; }],
+  ]},
+  { q: "헤드헌터 전화: \"연봉 20% 더 드릴게요.\"", o: [
+    ["바로 간다", S => { habit(S, 1); if (rnd() < .25) { S.skip = true; hp(S, -1); return "…6개월 만에 회사가 망했다"; } return "새 사원증 반짝!"; }],
+    ["의리로 남는다", S => { hp(S, 1); return "팀장님이 감동받았다"; }],
+    ["이직하면서 퇴직금 받아 차 산다", S => { cut(S, .35); hp(S, 2); addItem(S, "빨간 스포츠카"); S.flags.withdraw++; return "부릉부릉~ 출근길이 즐겁다"; }],
+  ]},
+  { q: "입사 동기가 코인으로 집 샀다는 소문이 돈다.", o: [
+    ["나도 간다, 인생 한 방", S => { shift(S, "r", .5); hp(S, 1); return "차트만 봐도 설렌다"; }],
+    ["배 아파서 소주 마신다", S => { hp(S, -1); return "크… 인생 쓰다"; }],
+    ["남은 남, 나는 나", S => "평온. 아주 평온."],
+  ]},
+  { q: "회사 앞 '노후 대비 세미나'에서 공짜 점심을 준대.", o: [
+    ["끝까지 듣고 상품도 가입", S => { shift(S, "g", .3); return "뭔가 똑똑해진 기분"; }],
+    ["점심만 먹고 튄다", S => { hp(S, 1); addItem(S, "공짜 볼펜"); return "도시락 맛집 인정"; }],
+    ["안 간다, 점심은 국밥이지", S => "든든한 국밥 최고"],
+  ]},
+  { q: "결혼식 축의금 폭탄 시즌이 왔다. 이번 달만 다섯 건!", o: [
+    ["연금이 통장에서 꺼낸다", S => { cut(S, .1); S.flags.withdraw++; hp(S, 1); return "통장이 살짝 가벼워졌다"; }],
+    ["올해는 저축을 쉰다", S => { S.skip = true; return "올해만이야… 진짜로"; }],
+    ["카드 할부로 버틴다", S => { hp(S, -1); return "할부의 늪으로…"; }],
+  ]},
+  { q: "12월, 팀장님: \"그 서류 냈어?\"", o: [
+    ["밤새서 빠짐없이 다 채워 낸다", S => { hp(S, -1); S.exp += 1.5 + S.habit; S.flags.tax = 1; return "서류 지옥… 근데 뭔가 돌아온다?"; }],
+    ["대충 내고 퇴근", S => { S.exp += .5; return "칼퇴는 소중해"; }],
+    ["무슨 서류요?", S => "몰라도 되겠지 뭐"],
+  ]},
+  { q: "우리 회사 주식을 싸게 살 기회가 떴다!", o: [
+    ["영혼까지 청약", S => { shift(S, "r", .4); return "애사심 MAX"; }],
+    ["적당히 산다", S => { shift(S, "r", .15); return "적당히가 제일 어렵다"; }],
+    ["회사는 회사, 돈은 돈", S => { shift(S, "s", .1); return "선 긋기 장인"; }],
+  ]},
+  { q: "주말 부업 제안: 월 50 더 벌 수 있대.", o: [
+    ["한다! 주말 반납", S => { habit(S, 1); hp(S, -1); return "주말이 사라졌다"; }],
+    ["안 한다, 주말은 소중해", S => { hp(S, 1); return "늦잠이 최고의 보약"; }],
+    ["부업 대신 코인 자동매매 돌린다", S => { shift(S, "r", .3); return "봇아 잘 부탁해"; }],
+  ]},
+  { q: "은행 문자: \"매달 알아서 떼어드릴까요?\"", o: [
+    ["네, 켜주세요", S => { habit(S, 1); return "딸깍. 설정 완료"; }],
+    ["귀찮아, 끈다", S => { habit(S, -1); return "알림 끄기 완료"; }],
+    ["금액 두 배로 켜주세요", S => { habit(S, 2); hp(S, -1); return "이번 달 배달 금지…"; }],
+  ]},
+  { q: "탕비실에서 자꾸 마주치는 그 사람…", o: [
+    ["용기 내서 커피 한잔 하자고 한다", S => { if (rnd() < .5) { hp(S, 2); addItem(S, "커플링"); return "두근두근, 사내 연애 시작!"; } hp(S, -1); return "\"아… 저 바빠서요\""; }],
+    ["모른 척 믹스커피만 탄다", S => "오늘도 믹스커피는 달다"],
+    ["회식 노래방에서 노래로 고백", S => { if (rnd() < .3) { hp(S, 3); addItem(S, "커플링"); return "전설의 고백 성공!!"; } hp(S, -2); return "다음 날 사내 메신저가 시끄럽다"; }],
+  ]},
+  { q: "건강검진 결과: 스트레스 지수 빨간불.", o: [
+    ["헬스장 1년권 끊는다", S => { hp(S, 1); addItem(S, "헬스장 회원권"); return "3일 갔다. 그래도 갔다"; }],
+    ["괜찮아, 무시한다", S => { hp(S, -1); return "괜찮아…괜찮…"; }],
+    ["반차 내고 낮잠", S => { hp(S, 1); return "zzz… 꿀잠"; }],
+  ]},
+  { q: "연금이 책상이 엉망진창이다.", o: [
+    ["주말에 대청소, 반반 정리", S => { S.alloc = { s: .4, g: .6, r: 0 }; return "깔끔! 제자리 찾기 완료"; }],
+    ["그냥 둔다, 다 내 자리 있음", S => "이게 내 질서야"],
+    ["다 갖다 버리고 새로 시작", S => { S.alloc = { s: 1, g: 0, r: 0 }; return "텅 빈 책상… 시원하다"; }],
+  ]},
+];
+const CRISIS = { q: "경기 한파! 연금이 통장이 녹아내리고 있다…", o: [
+  ["다 팔고 숨는다", S => { shift(S, "s", .8); hp(S, 1); S.flags.sold++; return "이불 속이 제일 안전해"; }],
+  ["눈 질끈 감고 버틴다", S => { hp(S, -1); S.flags.held++; return "앱 삭제. 안 보면 그만"; }],
+  ["오히려 더 산다", S => { shift(S, "g", .3); S.exp += 2; hp(S, -1); S.flags.held++; return "세일 기간이라고 생각하자"; }],
+]};
+
+/* ===== 엔딩 ===== */
+function ending(S) {
+  const n = Math.max(1, S.years), avg = k => S.sumAlloc[k] / n, f = S.flags;
+  if (f.withdraw >= 4) return { name: "반짝이 참새", desc: "소지품은 화려한데 몸은 가볍다! 인생 즐길 줄 아는 참새예요." };
+  if (S.demotions >= 2) return { name: "롤러코스터 연금이", desc: `올라갔다 떨어졌다, 강등만 ${S.demotions}번. 심장이 남아나질 않았어요.` };
+  if (avg("r") > .21) return { name: "승부사 도박닭", desc: "언제나 한 방을 노렸어요. 터지면 대박, 아니면… 아시죠?" };
+  if (S.burnouts >= 5) return { name: "번아웃 너구리", desc: "일은 열심히, 마음은 바닥. 쉬는 것도 실력이에요." };
+  if (f.held >= 5 && f.sold <= 2 && avg("g") > .18) return { name: "존버 불사조", desc: "폭풍 속에서도 버틴 끝에 날아올랐어요. 전설의 존버러." };
+  if (avg("s") > .68) return { name: "예금 거북이", desc: "절대 안 잃는 대신 아주 천천히 걷는 거북이예요." };
+  return { name: "무난한 김연금 사원", desc: "튀진 않지만 꾸준히. 회사마다 한 명씩 있는 그 사람." };
+}
+function reveals(S) {
+  const f = S.flags, won = Math.round(S.exp * 100), monthly = Math.round(S.exp * 100 / 240);
+  const out = [`사실 연금이 몸무게 1kg = 연금 100만 원이었어요. 65세 잔고 ${won.toLocaleString()}만 원 → 20년 동안 매달 약 ${monthly}만 원.`];
+  const pool = [];
+  if (f.withdraw) pool.push("'절대 열지 마' 봉투랑 이직 때 받은 퇴직금은 사실 연금이었어요. 꺼내 쓴 순간 복리도 같이 나가요.");
+  if (f.sold) pool.push("한파 때 팔고 숨은 건 손실 확정이었어요. 버틴 연금이는 다음 호황에 몰아서 컸어요.");
+  if (!f.tax) pool.push("12월의 그 서류는 연말정산. 연금저축+IRP 합쳐 900만 원까지 넣으면 최대 16.5%를 돌려받아요.");
+  if (f.dc && !f.sold) pool.push("\"네가 굴릴래?\"는 DC형 퇴직연금이었어요. 직접 굴리면 결과도 내 몫이에요.");
+  if (S.habit >= 3) pool.push("은행 자동이체가 연금이를 키운 숨은 공신이었어요.");
+  return out.concat(pool.slice(0, 2));
+}
+
+/* ===== 상태 ===== */
+const KEY = "pensiongotchi-v2";
+function fresh() {
+  return { age: START_AGE, exp: 5, hearts: 3, habit: 1, alloc: { s: 1, g: 0, r: 0 },
+    sumAlloc: { s: 0, g: 0, r: 0 }, years: 0, deck: [], cur: 0, lastBad: false,
+    items: [], flags: { withdraw: 0, tax: 0, sold: 0, held: 0, dc: 0, db: 0 },
+    demotions: 0, burnouts: 0, skip: false, ended: false };
+}
+function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
+function load() { try { const s = JSON.parse(localStorage.getItem(KEY)); return s && !s.ended && typeof s.age === "number" ? s : null; } catch (e) { return null; } }
+
+let S = load(), mode = "cover";
+
+/* ===== 1년 흐르기 ===== */
+function drawWeather() { let x = rnd(); for (const w of WEATHER) { if ((x -= w.p) < 0) return w; } return WEATHER[1]; }
+function yearTick(skip) {
+  const w = drawWeather(), a = S.alloc;
+  const ret = a.s * w.r.s + a.g * w.r.g + a.r * w.r.r;
+  const before = S.exp, sb = stageOf(before);
+  S.exp = Math.max(1, S.exp * (1 + ret) + 3 + (skip ? 0 : S.habit * 2.5));
+  const exposure = a.g + a.r;
+  S.lastBad = (w.k === "slump" || w.k === "crash") && exposure > .3;
+  if (w.k === "crash" && exposure > .3) hp(S, -1);
+  for (const k of ["s", "g", "r"]) S.sumAlloc[k] += a[k];
+  S.years++; S.age++;
+  const sa = stageOf(S.exp);
+  if (sa < sb) S.demotions++;
+  return { w, before, after: S.exp, sb, sa };
+}
+function burnout(notes) {
+  if (S.hearts <= 0) { S.hearts = 2; S.burnouts++; cut(S, .1); notes.push("번아웃… 연금이가 1년 휴직했어요"); }
+}
+function nextEvent() {
+  if (S.lastBad) { S.lastBad = false; S.cur = -1; return; }
+  if (!S.deck.length) S.deck = EVENTS.map((_, k) => k).sort(() => rnd() - .5);
+  S.cur = S.deck.pop();
+}
+const curEvent = () => S.cur === -1 ? CRISIS : EVENTS[S.cur];
+
+/* ===== 화면 ===== */
+const $ = id => document.getElementById(id);
+const fmt = e => e < 100 ? e.toFixed(1) : String(Math.round(e));
+function sprite(key, cls) {
+  const el = document.createElement("div"); el.className = "sprite " + (cls || "");
+  SPRITES[key].forEach(row => [...row].forEach(ch => { const px = document.createElement("i"); if (ch !== ".") px.className = ch; el.appendChild(px); }));
+  return el;
+}
+function hud() {
+  const st = S ? stageOf(S.exp) : 0;
+  $("hudLeft").textContent = S ? `${S.age}세 · ${STAGES[st].name} 연금이` : "입사 대기 중";
+  const h = S ? S.hearts : 3;
+  $("hearts").textContent = "♥".repeat(h) + "♡".repeat(3 - h);
+  const t = $("track"); t.innerHTML = "";
+  let fill = 0;
+  if (S) { fill = st === 3 ? 1 : (S.exp - TH[st]) / (TH[st + 1] - TH[st]); }
+  for (let k = 0; k < 14; k++) { const b = document.createElement("i"); if (k < Math.round(fill * 14)) b.className = "on"; t.appendChild(b); }
+  $("gLabel").textContent = S && st === 3 ? "최고 직급" : "승진까지";
+  $("kg").textContent = (S ? fmt(S.exp) : "5") + "kg";
+}
+function setButtons(on, labels) {
+  labels = labels || ["A", "B", "C"];
+  ["bA", "bB", "bC"].forEach((id, k) => { $(id).disabled = !on[k]; $(id).textContent = labels[k]; });
+}
+function setFF(on) { $("bF").disabled = !on; }
+function screen(petKey, petCls, sayText) {
+  const st = $("stage"); st.innerHTML = "";
+  const pet = document.createElement("div"); pet.className = "pet"; pet.appendChild(sprite(petKey, petCls)); st.appendChild(pet);
+  if (sayText !== undefined) { const say = document.createElement("div"); say.className = "say"; say.textContent = sayText; st.appendChild(say); }
+  return st;
+}
+function addHTML(st, cls, html) { const d = document.createElement("div"); d.className = cls; d.innerHTML = html; st.appendChild(d); return d; }
+
+function renderCover() {
+  mode = "cover";
+  if (S) {
+    const st = screen(STAGES[stageOf(S.exp)].key, "bounce", "연금이가 기다리고 있었어요!");
+    addHTML(st, "q", `${S.age}세 ${STAGES[stageOf(S.exp)].name}, 몸무게 ${fmt(S.exp)}kg. 오늘도 회사에서 무슨 일이 생길까?`);
+    addHTML(st, "opts", "<div><b>A</b><span>이어서 키우기</span></div><div><b>C</b><span>새 연금이 입양 (지금 연금이는 사라져요)</span></div>");
+    setButtons([true, false, true]);
+    $("hint").textContent = "A 이어하기 · C 새로 시작";
+  } else {
+    const st = screen("egg", "bounce", "회사원 연금이가 입사를 기다려요");
+    addHTML(st, "q", "매년 회사에서 사건이 터지고, 경기는 아무도 몰라요. 65세 은퇴 날 연금이는 뭐가 돼 있을까?");
+    addHTML(st, "opts", "<div><b>A</b><span>연금이 입사시키기</span></div>");
+    setButtons([true, false, false]);
+    $("hint").textContent = "A 버튼을 눌러 시작";
+  }
+  setFF(false); hud();
+}
+
+function renderEvent() {
+  mode = "event";
+  const ev = curEvent();
+  const st = screen(STAGES[stageOf(S.exp)].key, "bounce", S.cur === -1 ? "흐어어… 몸이 줄어든다" : "");
+  addHTML(st, "q", `<small>AGE ${S.age}${S.cur === -1 ? " · 긴급" : ""}</small>${ev.q}`);
+  addHTML(st, "opts", ev.o.map((c, k) => `<div><b>${"ABC"[k]}</b><span>${c[0]}</span></div>`).join(""));
+  setButtons([true, true, true]); setFF(true);
+  $("hint").textContent = "A · B · C 중에 골라요";
+  hud();
+}
+
+function stageMsg(t) {
+  if (t.sa > t.sb) return `승진! ${STAGES[t.sa].name} 연금이가 됐어요`;
+  if (t.sa < t.sb) return t.sa === 0 ? "강등… 다시 인턴으로 돌아갔어요" : `강등… ${STAGES[t.sa].name}(으)로 내려갔어요`;
+  return "";
+}
+
+function renderYear(sayText, t, notes) {
+  mode = "year";
+  const diff = t.after - t.before, bad = diff < 0 || t.sa < t.sb;
+  const st = screen(STAGES[t.sa].key, bad ? "shake" : "bounce", sayText);
+  const sm = stageMsg(t);
+  addHTML(st, "log",
+    `<div class="row"><span>올해 경기</span><span>${t.w.icon} ${t.w.name}</span></div>` +
+    `<div class="row"><span>연금이 몸무게</span><span>${fmt(t.before)} → ${fmt(t.after)}kg (${diff >= 0 ? "▲" : "▼"}${fmt(Math.abs(diff))})</span></div>` +
+    (sm ? `<div class="big">${sm}</div>` : "") +
+    notes.map(n => `<div class="big">${n}</div>`).join(""));
+  const done = S.age >= END_AGE;
+  setButtons([true, false, false], [done ? "★" : "▶", "B", "C"]);
+  setFF(!done);
+  $("hint").textContent = done ? "A 은퇴식 보러 가기" : "A 다음 해로";
+  save(); hud();
+}
+
+function choose(k) {
+  const opt = curEvent().o[k];
+  S.skip = false;
+  const say = opt[1](S);
+  const notes = []; burnout(notes);
+  const t = yearTick(S.skip);
+  burnout(notes);
+  renderYear(say, t, notes);
+}
+
+function fastForward() {
+  const startExp = S.exp, startStage = stageOf(S.exp), icons = [];
+  let dem = 0, n = 0;
+  while (n < 5 && S.age < END_AGE) {
+    const t = yearTick(false); icons.push(t.w.icon); if (t.sa < t.sb) dem++; n++;
+  }
+  mode = "ff";
+  const sa = stageOf(S.exp), diff = S.exp - startExp;
+  const say = diff >= 0 ? "휘리릭~ 시간이 흘렀어요" : "휘리릭… 뭔가 잃어버린 느낌";
+  const st = screen(STAGES[sa].key, diff >= 0 ? "bounce" : "shake", say);
+  const sm = stageMsg({ sb: startStage, sa });
+  addHTML(st, "log",
+    `<div class="row"><span>${n}년간 경기</span><span>${icons.join(" ")}</span></div>` +
+    `<div class="row"><span>연금이 몸무게</span><span>${fmt(startExp)} → ${fmt(S.exp)}kg</span></div>` +
+    (sm ? `<div class="big">${sm}</div>` : "") +
+    (dem ? `<div class="big">그사이 강등을 ${dem}번 겪었어요…</div>` : ""));
+  const done = S.age >= END_AGE;
+  setButtons([true, false, false], [done ? "★" : "▶", "B", "C"]);
+  setFF(!done);
+  $("hint").textContent = done ? "A 은퇴식 보러 가기" : "A 계속 · 한 번 더 빨리감기도 OK";
+  save(); hud();
+}
+
+function renderEnd() {
+  mode = "end";
+  S.ended = true; save();
+  const e = ending(S), sa = stageOf(S.exp);
+  const st = screen(STAGES[sa].key, "bounce");
+  addHTML(st, "end",
+    `<div class="title">${e.name}</div>` +
+    `<div class="sub">65세 은퇴 · 최종 직급 ${STAGES[sa].name} · ${fmt(S.exp)}kg</div>` +
+    `<div class="desc">${e.desc}</div>` +
+    (S.items.length ? `<div class="sub">소지품: ${S.items.join(", ")}</div>` : ""));
+  const ul = document.createElement("ul"); ul.className = "reveal";
+  ul.innerHTML = reveals(S).map(r => `<li>${r}</li>`).join("");
+  st.appendChild(ul);
+  setButtons([true, false, true], ["↻", "B", "⎘"]); setFF(false);
+  $("hint").textContent = "A 새 연금이 입양 · C 결과 복사";
+  hud();
+}
+
+async function copyResult() {
+  const e = ending(S);
+  const text = `[내 연금 키우기] 우리 연금이는 '${e.name}' (최종 ${STAGES[stageOf(S.exp)].name}, ${fmt(S.exp)}kg)\n${e.desc}`;
+  try { await navigator.clipboard.writeText(text); $("hint").textContent = "복사됐어요! 친구 연금이랑 비교해봐요"; }
+  catch (err) { $("hint").textContent = "복사가 막혔어요. 화면을 캡처해서 공유해주세요"; }
+}
+
+function press(k) {
+  const id = ["bA", "bB", "bC"][k]; $(id).classList.add("press"); setTimeout(() => $(id).classList.remove("press"), 120);
+  if (mode === "cover") {
+    if (k === 2) { S = fresh(); }
+    if (!S) S = fresh();
+    nextEvent(); save(); renderEvent(); return;
+  }
+  if (mode === "event") { choose(k); return; }
+  if (mode === "year" || mode === "ff") {
+    if (S.age >= END_AGE) { renderEnd(); return; }
+    nextEvent(); save(); renderEvent(); return;
+  }
+  if (mode === "end") {
+    if (k === 0) { try { localStorage.removeItem(KEY); } catch (e) {} S = null; renderCover(); }
+    if (k === 2) copyResult();
+  }
+}
+
+["bA", "bB", "bC"].forEach((id, k) => $(id).addEventListener("click", () => press(k)));
+$("bF").addEventListener("click", () => { if (mode === "event" || mode === "year" || mode === "ff") fastForward(); });
+/* ===== 연금 타운 바닥 타일 ===== */
+(function tiles() {
+  const g = document.getElementById("tiles"); if (!g) return;
+  const H = 496, B = 800, R = 9, C = 14, cx = 600;
+  const yAt = t => H + (B - H) * Math.pow(t, 1.7);
+  const xAt = (c, y) => { const u = (y - H) / (B - H); return cx + c * (46 + (140 - 46) * u); };
+  let out = "";
+  for (let r = 0; r < R; r++) {
+    const y0 = yAt(r / R), y1 = yAt((r + 1) / R);
+    for (let c = -C; c < C; c++) {
+      if ((r + c) % 2 === 0) continue;
+      out += `<polygon points="${xAt(c, y0)},${y0} ${xAt(c + 1, y0)},${y0} ${xAt(c + 1, y1)},${y1} ${xAt(c, y1)},${y1}" fill="#fbead6"/>`;
+    }
+  }
+  g.innerHTML = out;
+})();
+
+/* ===== 페이스플레이트 아이콘: 지금 화면에 맞춰 불 켜기 ===== */
+const ICON_FOR = { cover: "i-bulb", event: "i-case", year: "i-chart", ff: "i-fast", end: "i-gift" };
+function lightIcons() {
+  document.querySelectorAll(".ico").forEach(el => el.classList.remove("on", "warn"));
+  const id = ICON_FOR[mode]; if (id) $(id).classList.add("on");
+  if (mode === "end") $("i-coin").classList.add("on");
+  if (S && S.hearts <= 1 && mode !== "end") $("i-heart").classList.add("warn");
+  if (S && mode !== "end") $("i-save").classList.add("on");
+}
+for (const name of ["renderCover", "renderEvent", "renderYear", "fastForward", "renderEnd"]) {
+  const f = window[name];
+  window[name] = function (...a) { const r = f.apply(this, a); lightIcons(); return r; };
+}
+renderCover();
+</script>
+</body>
+</html>
