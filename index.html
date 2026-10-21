@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#dfeaf7">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>나에게 맞는 증권사는?</title>
+<meta property="og:title" content="나에게 맞는 증권사는?">
+<meta property="og:description" content="12문항으로 내 성향과 제일 닮은 증권사를 찾아보세요. 국내 12 + 외국계 4.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500;700&display=swap">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}[hidden]{display:none!important}</style>
+</head>
+<body>
+<style>
+/* Layout: one phone-width column floating above a fixed "여의도 거리" strip where 16 original
+   broker characters walk. Pixel-game chrome: hard shadows, stepped borders, blinking cursor. */
+:root{
+  --bg:#dfeaf7; --sky:#cfe3fb; --road:#8a8f9a; --curb:#d8d2b8; --bldg:#aebdd6;
+  --panel:#fffdf6; --fg:#15202b; --muted:#5d6b7c; --line:#15202b;
+  --accent:#e23a2e; --accent2:#2458c5; --gold:#f2b705; --soft:#eef2f8;
+  --pix:"Press Start 2P",monospace; --display:"Black Han Sans","Noto Sans KR",sans-serif;
+  --body:"Noto Sans KR",system-ui,-apple-system,sans-serif;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0f1626; --sky:#111c33; --road:#2c3140; --curb:#4a4636; --bldg:#1f2b45;
+  --panel:#1a2234; --fg:#eef2f8; --muted:#9aa8bd; --line:#eef2f8;
+  --accent:#ff5a4f; --accent2:#5f8dff; --gold:#ffd04a; --soft:#243049; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#0f1626; --sky:#111c33; --road:#2c3140; --curb:#4a4636; --bldg:#1f2b45;
+  --panel:#1a2234; --fg:#eef2f8; --muted:#9aa8bd; --line:#eef2f8;
+  --accent:#ff5a4f; --accent2:#5f8dff; --gold:#ffd04a; --soft:#243049; color-scheme:dark }
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);line-height:1.55;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 170px}
+body::before{content:"";position:fixed;inset:0;background:linear-gradient(var(--sky),var(--bg) 60%);z-index:-1}
+.wrap{max-width:520px;margin:0 auto}
+h1,h2,h3{font-family:var(--display);font-weight:400;letter-spacing:.01em;text-wrap:balance;margin:0}
+button{font-family:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+button:focus-visible{outline:3px solid var(--accent2);outline-offset:2px}
+.pix{font-family:var(--pix);font-size:.6rem;letter-spacing:.02em;line-height:1.6}
+.panel{background:var(--panel);border:3px solid var(--line);box-shadow:6px 6px 0 var(--line);padding:1.1rem 1.1rem;position:relative}
+.btn{border:3px solid var(--line);box-shadow:4px 4px 0 var(--line);padding:.9rem 1rem;font-size:1rem;font-weight:700;background:var(--accent);color:#fff;width:100%;transition:transform .08s,box-shadow .08s}
+.btn.alt{background:var(--panel);color:var(--fg)}
+.btn.gold{background:var(--gold);color:#15202b}
+.btn{min-height:52px}
+.btn:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--line)}
+.blink{animation:blink 1s steps(2) infinite}
+@keyframes blink{to{opacity:0}}
+@media (prefers-reduced-motion:reduce){.blink{animation:none}}
+
+/* ===== intro ===== */
+.intro{padding-block:2.2rem 1rem;display:flex;flex-direction:column;gap:1.1rem}
+.titlebox{text-align:center;display:flex;flex-direction:column;gap:.6rem;align-items:center}
+.titlebox .pix{color:var(--accent2)}
+.titlebox h1{font-size:clamp(2.4rem,10vw,3.4rem);line-height:1.05;text-shadow:4px 4px 0 var(--accent)}
+.titlebox h1 span{display:block;font-size:.55em;text-shadow:none;color:var(--muted)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem}
+.stat{border:3px solid var(--line);background:var(--panel);padding:.6rem .4rem;text-align:center;box-shadow:3px 3px 0 var(--line)}
+.stat b{font-family:var(--pix);font-size:1rem;display:block;color:var(--accent2)}
+.stat small{font-size:.72rem;color:var(--muted)}
+.intro p{margin:0;font-size:.95rem}
+.note{font-size:.76rem;color:var(--muted);text-align:center}
+
+/* ===== quiz ===== */
+.quiz{padding-block:1.4rem 1rem;display:flex;flex-direction:column;gap:1rem}
+.hud{display:flex;align-items:center;justify-content:space-between;gap:.8rem}
+.hud .pix{color:var(--muted)}
+.hp{display:flex;gap:3px}
+.hp i{width:14px;height:12px;border:2px solid var(--line);background:var(--panel)}
+.hp i.on{background:var(--gold)}
+.dialog{min-height:5.4rem}
+.dialog .pix{color:var(--accent);margin-bottom:.5rem;display:block}
+.dialog .q{font-size:1.3rem;line-height:1.35}
+.dialog .cur{position:absolute;right:.9rem;bottom:.6rem;color:var(--accent);font-family:var(--pix);font-size:.6rem}
+.opts{display:flex;flex-direction:column;gap:.7rem}
+.opt{text-align:left;background:var(--panel);border:3px solid var(--line);box-shadow:4px 4px 0 var(--line);padding:.95rem 1rem .95rem 2.2rem;font-size:1rem;line-height:1.45;color:var(--fg);position:relative;transition:transform .08s,box-shadow .08s}
+.opt::before{content:"▶";font-family:var(--pix);font-size:.6rem;position:absolute;left:.8rem;top:1.15rem;color:var(--accent);opacity:0}
+.opt{min-height:52px}
+@media (hover:hover){.opt:hover::before{opacity:1}.opt:hover{transform:translate(-2px,0)}}
+.opt:focus-visible::before{opacity:1}
+.opt:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--line)}
+.back{align-self:flex-start;background:none;border:0;color:var(--muted);font-family:var(--pix);font-size:.6rem;padding:.8rem 0;min-height:44px}
+
+/* ===== result ===== */
+.result{padding-block:1.2rem 1rem;display:flex;flex-direction:column;gap:1rem}
+.card{display:grid;grid-template-columns:120px 1fr;gap:1rem;align-items:center}
+.card .stage{display:flex;align-items:flex-end;justify-content:center;height:140px;background:var(--soft);border:3px solid var(--line);position:relative;overflow:hidden}
+.card .stage::after{content:"";position:absolute;left:0;right:0;bottom:0;height:14px;background:var(--road)}
+.card .stage .ch{position:relative;z-index:1;margin-bottom:10px;animation:bob 1.2s steps(2) infinite}
+@keyframes bob{50%{transform:translateY(-3px)}}
+.card .info{min-width:0;display:flex;flex-direction:column;gap:.3rem}
+.card .rank{font-family:var(--pix);font-size:.55rem;color:var(--accent2)}
+.card .nick{font-size:.88rem;color:var(--muted);font-weight:500}
+.card h2{font-size:clamp(1.7rem,7vw,2.3rem);line-height:1.1}
+.card .region{font-family:var(--pix);font-size:.55rem;color:var(--fg);background:var(--gold);padding:.25rem .45rem;width:max-content;border:2px solid var(--line)}
+.desc{font-size:.95rem;margin:0}
+.tags{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.6rem}
+.tags span{font-size:.78rem;padding:.2rem .55rem;border:2px solid var(--line);background:var(--soft);font-weight:500}
+@media (max-width:380px){.card{grid-template-columns:1fr}.card .stage{height:120px}}
+
+.axes{display:flex;flex-direction:column;gap:.7rem}
+.axis{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:.5rem;font-size:.8rem}
+.axis .l{text-align:right}
+.axis .l,.axis .r{color:var(--muted);min-width:0}
+.axis .on{color:var(--fg);font-weight:700}
+.axis .track{width:104px;height:12px;border:2px solid var(--line);background:var(--panel);display:flex}
+.axis .track i{flex:1;margin:1px;background:var(--panel)}
+.axis .track i.f{background:var(--accent2)}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:.7rem}
+.pair .p{display:flex;gap:.6rem;align-items:center;min-width:0;padding:.7rem .8rem}
+.pair .p .mini{flex:none}
+.pair .p strong{display:block;font-size:.95rem;line-height:1.2}
+.pair .p small{color:var(--muted);font-size:.72rem;display:block}
+.pair .p .pix{display:block;margin-bottom:.15rem}
+.pair .good .pix{color:var(--accent)} .pair .bad .pix{color:var(--accent2)}
+@media (max-width:380px){.pair{grid-template-columns:1fr}}
+.actions{display:flex;flex-direction:column;gap:.7rem}
+.toast{font-size:.82rem;color:var(--muted);text-align:center;min-height:1.3em}
+
+/* ===== all list ===== */
+.all{padding-block:1.4rem 1rem;display:flex;flex-direction:column;gap:1rem}
+.sec{font-size:1.15rem}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
+.cell{background:var(--panel);border:3px solid var(--line);box-shadow:3px 3px 0 var(--line);padding:.6rem .7rem;min-width:0;display:flex;gap:.6rem;align-items:center}
+.cell .mini{flex:none}
+.cell strong{display:block;font-size:.92rem;line-height:1.2}
+.cell small{color:var(--muted);font-size:.72rem;display:block}
+
+/* ===== street ===== */
+.street{position:fixed;left:0;right:0;bottom:0;height:150px;overflow:hidden;pointer-events:none;z-index:5;
+  padding-bottom:env(safe-area-inset-bottom,0px);background:linear-gradient(transparent 0,transparent 58px,var(--curb) 58px,var(--curb) 64px,var(--road) 64px,var(--road) 112px,var(--curb) 112px,var(--curb) 120px,var(--bg) 120px)}
+.street .skyline{position:absolute;left:0;right:0;bottom:92px;height:70px;display:flex;align-items:flex-end;gap:6px;padding:0 4px;opacity:.9}
+.street .skyline i{display:block;background:var(--bldg);border:2px solid var(--line);border-bottom:0;flex:none;position:relative}
+.street .skyline i::after{content:"";position:absolute;inset:6px 4px;background:repeating-linear-gradient(var(--panel) 0 3px,transparent 3px 8px),repeating-linear-gradient(90deg,transparent 0 4px,var(--bldg) 4px 7px);opacity:.55}
+.street .lane{position:absolute;left:0;bottom:36px;display:flex;gap:46px;width:max-content;animation:walk-lane 60s linear infinite;align-items:flex-end}
+.street .lane:nth-child(3){bottom:14px;animation-duration:75s;animation-direction:reverse}
+@keyframes walk-lane{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.street .lane .wrapch{display:flex;flex-direction:column;align-items:center;gap:4px}
+.street .lane .tag{font-size:.6rem;font-weight:700;background:var(--panel);border:2px solid var(--line);padding:1px 4px;white-space:nowrap}
+.street .lane .ch .leg.a{animation:stepA .5s steps(2) infinite}
+.street .lane .ch .leg.b{animation:stepB .5s steps(2) infinite}
+.street .lane .ch{animation:bob .5s steps(2) infinite}
+.street .lane:nth-child(3) .ch{transform:scaleX(-1)}
+@keyframes stepA{50%{transform:translate(4px,-2px)}}
+@keyframes stepB{50%{transform:translate(-4px,-2px)}}
+@media (max-height:700px){body{padding-block:0 130px}.street{height:112px;background:linear-gradient(transparent 0,transparent 28px,var(--curb) 28px,var(--curb) 34px,var(--road) 34px,var(--road) 82px,var(--curb) 82px,var(--curb) 90px,var(--bg) 90px)}.street .skyline{bottom:62px;height:40px}.street .lane{bottom:6px}.street .lane:nth-child(3){display:none}}
+@media (prefers-reduced-motion:reduce){.street .lane,.street .lane .ch,.street .lane .ch .leg,.card .stage .ch{animation:none}}
+
+/* ===== character (pure CSS) ===== */
+.ch{--u:4px;--suit:#333;--tie:#c33;--hair:#222;--skin:#f3c9a3;width:calc(var(--u)*10);height:calc(var(--u)*16);position:relative;flex:none;image-rendering:pixelated}
+.ch>i{position:absolute;display:block}
+.ch .hair{top:0;left:calc(var(--u)*2);width:calc(var(--u)*6);height:calc(var(--u)*2);background:var(--hair)}
+.ch .face{top:calc(var(--u)*2);left:calc(var(--u)*2);width:calc(var(--u)*6);height:calc(var(--u)*4);background:var(--skin)}
+.ch .eye{top:calc(var(--u)*3.4);left:calc(var(--u)*3.2);width:var(--u);height:var(--u);background:#15202b;box-shadow:calc(var(--u)*2.6) 0 0 #15202b}
+.ch .body{top:calc(var(--u)*6);left:calc(var(--u)*1.5);width:calc(var(--u)*7);height:calc(var(--u)*6);background:var(--suit)}
+.ch .shirt{top:calc(var(--u)*6);left:calc(var(--u)*4);width:calc(var(--u)*2);height:calc(var(--u)*4);background:#fff}
+.ch .tie{top:calc(var(--u)*6.5);left:calc(var(--u)*4.5);width:var(--u);height:calc(var(--u)*3);background:var(--tie)}
+.ch .leg{top:calc(var(--u)*12);width:calc(var(--u)*2.5);height:calc(var(--u)*4);background:color-mix(in srgb,var(--suit) 70%,#000)}
+.ch .leg.a{left:calc(var(--u)*2)} .ch .leg.b{left:calc(var(--u)*5.5)}
+.ch .acc{bottom:calc(var(--u)*3);right:calc(var(--u)*-1.5);width:calc(var(--u)*3);height:calc(var(--u)*2.5);background:#7a4b22;border:1px solid #15202b}
+.ch .acc.phone{background:#15202b;width:calc(var(--u)*1.5);height:calc(var(--u)*2.5);right:calc(var(--u)*-.5);bottom:calc(var(--u)*7)}
+.ch .acc.coffee{background:#fff;border:1px solid #15202b;width:calc(var(--u)*2);height:calc(var(--u)*2.5);bottom:calc(var(--u)*5)}
+.ch .acc.bag{background:#1d3b7a;width:calc(var(--u)*2.5);height:calc(var(--u)*4);bottom:calc(var(--u)*4)}
+.ch .acc.folder{background:#f2d27a;width:calc(var(--u)*3);height:calc(var(--u)*3.5);bottom:calc(var(--u)*4.5)}
+.ch .acc.tablet{background:#444;width:calc(var(--u)*3);height:calc(var(--u)*2);bottom:calc(var(--u)*6)}
+.ch .acc.cash{background:#3a9d5d;width:calc(var(--u)*3);height:calc(var(--u)*1.5);bottom:calc(var(--u)*6)}
+.ch .acc.umbrella{background:#c33;width:calc(var(--u)*1);height:calc(var(--u)*7);bottom:calc(var(--u)*3);right:calc(var(--u)*-1)}
+.ch .hat{top:calc(var(--u)*-1.5);left:calc(var(--u)*1.5);width:calc(var(--u)*7);height:calc(var(--u)*2);background:var(--hair);border-top:calc(var(--u)*1.5) solid var(--hair)}
+.ch .glasses{top:calc(var(--u)*3.2);left:calc(var(--u)*2.6);width:calc(var(--u)*4.8);height:calc(var(--u)*1.4);border:1px solid #15202b;border-radius:2px;background:rgba(255,255,255,.35)}
+.ch .badge{top:calc(var(--u)*7);left:calc(var(--u)*2);width:calc(var(--u)*1.5);height:calc(var(--u)*2);background:#fff;border:1px solid #15202b}
+.mini .ch{--u:2.5px}
+.big .ch{--u:7px}
+</style>
+
+<div class="wrap">
+  <!-- 인트로 -->
+  <section class="intro" id="intro">
+    <div class="titlebox">
+      <span class="pix">SECURITIES PERSONALITY QUEST</span>
+      <h1>나에게 맞는<br>증권사는?<span>여의도 입사 시뮬레이션</span></h1>
+    </div>
+    <div class="stats">
+      <div class="stat"><b>12</b><small>문항</small></div>
+      <div class="stat"><b>16</b><small>증권사 캐릭터</small></div>
+      <div class="stat"><b>4</b><small>성향 축</small></div>
+    </div>
+    <div class="panel">
+      <p>안정 vs 도전, 개인 vs 기업, 관계 vs 효율, 국내 vs 글로벌. 네 가지 축으로 국내 12곳 + 외국계 4곳 중 내 성향과 제일 닮은 증권사를 찾아줘요. 아래 거리를 걷는 16명이 후보예요.</p>
+    </div>
+    <button class="btn" id="startBtn"><span class="pix blink">▶ PRESS START</span></button>
+    <button class="btn alt" id="seeAllBtn">캐릭터 도감 보기</button>
+    <span class="note">재미로 보는 테스트예요. 각 회사의 공식 입장과는 무관합니다.</span>
+  </section>
+
+  <!-- 문항 -->
+  <section class="quiz" id="quiz" hidden>
+    <div class="hud"><span class="pix" id="progText">STAGE 01/12</span><div class="hp" id="hp"></div></div>
+    <div class="panel dialog"><span class="pix">? QUESTION</span><h2 class="q" id="qText"></h2><span class="cur blink">▼</span></div>
+    <div class="opts" id="opts"></div>
+    <button class="back" id="backBtn">◀ BACK</button>
+  </section>
+
+  <!-- 결과 -->
+  <section class="result" id="result" hidden>
+    <span class="pix" style="color:var(--accent2)">★ RESULT · 당신과 제일 닮은 증권사</span>
+    <div class="panel card">
+      <div class="stage big" id="rStage"></div>
+      <div class="info">
+        <span class="rank" id="rCode"></span>
+        <span class="region" id="rRegion"></span>
+        <span class="nick" id="rNick"></span>
+        <h2 id="rName"></h2>
+      </div>
+    </div>
+    <div class="panel"><p class="desc" id="rDesc"></p><div class="tags" id="rTags"></div></div>
+    <div class="panel axes" id="axes"></div>
+    <div class="pair">
+      <div class="panel p good"><div class="mini" id="rSoulCh"></div><div style="min-width:0"><span class="pix">BUDDY</span><strong id="rSoul"></strong><small id="rSoulWhy"></small></div></div>
+      <div class="panel p bad"><div class="mini" id="rOppCh"></div><div style="min-width:0"><span class="pix">RIVAL</span><strong id="rOpp"></strong><small id="rOppWhy"></small></div></div>
+    </div>
+    <div class="actions">
+      <button class="btn gold" id="copyBtn">결과 복사해서 공유하기</button>
+      <button class="btn alt" id="retryBtn">다시 하기</button>
+      <button class="btn alt" id="allBtn">캐릭터 도감 보기</button>
+    </div>
+    <div class="toast" id="toast"></div>
+  </section>
+
+  <!-- 도감 -->
+  <section class="all" id="all" hidden>
+    <span class="pix" style="color:var(--accent2)">CHARACTER BOOK · 16</span>
+    <h2 class="sec">국내 증권사 12</h2>
+    <div class="grid" id="gridK"></div>
+    <h2 class="sec">외국계 증권사 4</h2>
+    <div class="grid" id="gridG"></div>
+    <button class="btn alt" id="homeBtn">처음으로</button>
+  </section>
+</div>
+
+<div class="street" aria-hidden="true">
+  <div class="skyline" id="skyline"></div>
+  <div class="lane" id="lane1"></div>
+  <div class="lane" id="lane2"></div>
+</div>
+
+<script>
+// 축: A 안정/도전 · B 개인/기업 · C 관계/효율 · D 국내/글로벌
+const AXES=[
+ {k:'A',l:['S','안정'],r:['C','도전']},
+ {k:'B',l:['R','개인·리테일'],r:['I','기업·IB']},
+ {k:'C',l:['T','관계·전통'],r:['D','효율·혁신']},
+ {k:'D',l:['K','국내'],r:['G','글로벌']},
+];
+const Q=[
+ {ax:'A',q:'새 프로젝트가 떨어졌다. 내 첫 반응은?',a:['검증된 방식으로 리스크 없이 간다','아무도 안 해본 방식으로 한 번 질러본다']},
+ {ax:'A',q:'연봉 제안이 두 개 들어왔다. 어느 쪽?',a:['고정급 높고 안정적인 쪽','기본급은 낮지만 인센티브 상한이 없는 쪽']},
+ {ax:'A',q:'내 주식 계좌를 열어보면 보통…',a:['배당주, ETF 사놓고 오래 묵혀둔다','테마 잡히면 들어갔다 빠르게 나온다']},
+ {ax:'B',q:'일하다 "이 맛에 일하지" 싶은 순간은?',a:['개인 고객 한 명 한 명 만나서 상담이 통할 때','기업·기관 상대로 큰 딜이 굴러갈 때']},
+ {ax:'B',q:'뉴스 피드에서 먼저 눌러보는 기사는?',a:['"2030 요즘 어디에 투자하나" 트렌드 기사','"OO기업 조 단위 M&A" 딜 소식']},
+ {ax:'B',q:'회사 이름이 빛나는 순간, 더 뿌듯한 건?',a:['고객이 "덕분에 노후 걱정 덜었어요"라고 할 때','리그테이블 맨 윗줄에 우리 회사가 있을 때']},
+ {ax:'C',q:'꼬인 일을 푸는 내 방식은?',a:['직접 만나서 얼굴 보고 이야기한다','메신저랑 데이터로 빠르게 정리한다']},
+ {ax:'C',q:'회식에 대한 솔직한 생각은?',a:['가끔은 필요해, 관계가 곧 일이니까','각자 퇴근하고 성과로 말하면 되지']},
+ {ax:'C',q:'새로 나온 업무 툴, 나는?',a:['쓰던 게 잘 되는데 굳이?','일단 깔아보고 판단한다']},
+ {ax:'D',q:'영어로 일하는 환경이라면?',a:['피곤하다, 한국어로 깊게 가는 게 좋다','오히려 더 신난다']},
+ {ax:'D',q:'내 커리어 무대를 고른다면?',a:['국내 시장에서 최고가 되는 것','뉴욕·런던·홍콩, 어디든 가보는 것']},
+ {ax:'D',q:'갑자기 해외 장기 파견 제안이 왔다.',a:['가족·친구·익숙한 생활이 더 중요하다','짐부터 싼다']},
+];
+
+// p: 축별 목표값(0=왼쪽, 3=오른쪽). c: 캐릭터 외형(정장색, 넥타이, 머리, 소품)
+const FIRMS=[
+ {n:'삼성증권',nick:'품격 있는 자산관리 집사',t:'국내',p:[0,0,0,1],c:{suit:'#1b3a8a',tie:'#c9a227',hair:'#222',acc:'briefcase',extra:'badge'},d:'급하게 안 가요. 브랜드와 신뢰로 고액자산가의 돈을 오래 지키는 쪽이 체질. 정중하고 꼼꼼해서 "믿고 맡길 수 있는 사람"이라는 말을 자주 듣는 타입이에요.',tags:['#신뢰','#프리미엄','#꼼꼼']},
+ {n:'키움증권',nick:'개미들의 홈그라운드',t:'국내',p:[1,0,3,0],c:{suit:'#4a2c8f',tie:'#ff8c1a',hair:'#3b2416',acc:'phone',extra:'glasses'},d:'화려한 건 없어도 쓰기 편하고 수수료 싸고, 매일 쓰는 사람이 제일 많은 곳. 겉치레보다 실속, 대면보다 화면이 편한 당신에게 딱이에요.',tags:['#실속','#온라인','#국민픽']},
+ {n:'NH투자증권',nick:'IB 명가의 정석',t:'국내',p:[0,3,1,0],c:{suit:'#1f6f3a',tie:'#f2c94c',hair:'#222',acc:'folder'},d:'튀지 않고 기본기로 승부. 농협이라는 든든한 뒷배에 IB 전통까지, 한 번 맡은 딜은 끝까지 안정적으로 끌고 가는 타입이에요. 선배들이 "쟤는 믿고 맡긴다"고 하는 쪽.',tags:['#기본기','#IB','#뒷배']},
+ {n:'KB증권',nick:'지주 품의 균형 잡힌 올라운더',t:'국내',p:[1,2,2,0],c:{suit:'#5b5b5b',tie:'#f2b705',hair:'#2a1a0f',acc:'tablet',extra:'badge'},d:'은행·보험·카드와 한 식구라 혼자 튀기보다 전체 그림 안에서 효율을 챙겨요. 어느 부서에 가도 평균 이상, 조직이 좋아하는 모범생 스타일.',tags:['#균형','#조직형','#모범생']},
+ {n:'미래에셋증권',nick:'글로벌을 꿈꾸는 개척자',t:'국내',p:[2,0,1,2],c:{suit:'#d9641e',tie:'#1b3a8a',hair:'#111',acc:'bag'},d:'국내에 머물 생각이 애초에 없어요. 해외주식, 연금, 글로벌 ETF까지 개인 고객을 데리고 세계로 나가는 타입. 비전 크게 말하고 실제로 밀어붙이는 사람.',tags:['#비전','#해외투자','#연금']},
+ {n:'카카오페이증권',nick:'생활 속 투자 입문 안내자',t:'국내',p:[2,0,3,0],c:{suit:'#f2d23a',tie:'#5a3a1a',hair:'#3b2416',acc:'phone',extra:'glasses'},d:'"투자는 어렵다"는 사람들을 메신저 옆으로 데려와 천 원부터 시작하게 만든 곳. 거창한 상품보다 매일 쓰는 습관을 설계하는 게 재밌는 당신. 가볍고 친근하고 빠른 타입이에요.',tags:['#생활밀착','#소액투자','#플랫폼']},
+ {n:'한국투자증권',nick:'전 부문 1위를 노리는 승부사',t:'국내',p:[3,2,1,1],c:{suit:'#1a1f33',tie:'#e23a2e',hair:'#111',acc:'briefcase'},d:'IB, 리테일, 연금, 발행어음까지 손대는 건 다 1등 하고 싶은 타입. 성과주의 문화에서 오히려 에너지가 올라가고, "할 거면 제대로"가 입버릇이에요. 사람 챙기는 것도 영업의 일부라고 생각하죠.',tags:['#승부사','#성과주의','#올라운드']},
+ {n:'메리츠증권',nick:'성과로 말하는 실력파',t:'국내',p:[3,3,3,0],c:{suit:'#7a1f2b',tie:'#222',hair:'#222',acc:'cash'},d:'회식도 연차도 알아서, 대신 숫자로 증명해요. 군더더기 없는 조직에서 개인의 실력이 그대로 보상으로 돌아오는 구조가 편한 당신. 눈치 대신 실적.',tags:['#실력주의','#보상','#자율']},
+ {n:'부국증권',nick:'작지만 단단한 채권 장인',t:'국내',p:[0,2,0,0],c:{suit:'#3b3b3b',tie:'#2458c5',hair:'#777',acc:'folder',extra:'hat'},d:'간판은 작아도 재무는 누구보다 튼튼한 곳. 유행을 안 타고, 빚 안 지고, 하던 걸 잘하는 데 집중해요. 조용히 오래 가는 게 멋이라고 생각하는 당신이에요.',tags:['#건전성','#채권','#뚝심']},
+ {n:'대신증권',nick:'오래된 리테일 명가의 균형감',t:'국내',p:[1,1,1,0],c:{suit:'#2b4a7a',tie:'#8fb3e8',hair:'#222',acc:'umbrella'},d:'개인투자자와 함께 수십 년을 걸어온 전통에, 부동산·대체투자로 조용히 판을 넓힌 유연함까지. 전통도 지키고 변화도 챙기는, 어느 한쪽으로 안 치우치는 타입이에요.',tags:['#전통','#다각화','#균형']},
+ {n:'유안타증권',nick:'아시아 네트워크 품은 실속파',t:'국내',p:[1,1,2,2],c:{suit:'#1f7a7a',tie:'#e23a2e',hair:'#111',acc:'tablet'},d:'국내 증권사인데 대만·범중화권 그룹이 뒤에 있어요. 데이터 기반 트레이딩 툴로 개인 고객을 챙기면서 아시아로 뻗을 길도 열어둔 당신. 실속 있게 글로벌을 꿈꾸는 타입.',tags:['#아시아','#트레이딩','#실속']},
+ {n:'SK증권',nick:'변화 속에서 기회 찾는 중형 IB',t:'국내',p:[2,3,2,0],c:{suit:'#8a2b3a',tie:'#f2b705',hair:'#2a1a0f',acc:'coffee'},d:'대기업 울타리를 벗어난 뒤 IB·PE·채권으로 자기 길을 찾아가는 곳. 큰 조직의 안정보다 작고 빠른 팀에서 딜을 직접 굴려보고 싶은 당신에게 맞아요.',tags:['#IB','#PE','#변화']},
+ {n:'Goldman Sachs',nick:'월가의 엘리트 승부사',t:'외국계',p:[3,3,1,3],c:{suit:'#1a2b5a',tie:'#8fb3e8',hair:'#5a3a1a',acc:'cash',extra:'badge'},d:'가장 큰 딜, 가장 센 사람들, 가장 긴 밤. 네트워크와 승부욕으로 정상에 오르는 게 목표인 당신. 사람을 움직여 돈을 움직이는 전형적인 IB 체질이에요.',tags:['#엘리트','#네트워크','#정상']},
+ {n:'Morgan Stanley',nick:'변신에 성공한 전략가',t:'외국계',p:[1,2,2,3],c:{suit:'#2a3a4a',tie:'#1b7fc4',hair:'#6b4a2a',acc:'tablet',extra:'glasses'},d:'IB 명가가 리테일 플랫폼을 인수하며 체질을 바꿨듯, 당신도 큰 그림 보고 구조를 바꾸는 쪽. 전통을 지키면서도 효율은 포기 안 하는 전략가예요.',tags:['#전략','#구조조정','#균형감']},
+ {n:'UBS',nick:'스위스식 정밀 자산관리',t:'외국계',p:[0,0,1,3],c:{suit:'#111',tie:'#e23a2e',hair:'#999',acc:'briefcase',extra:'glasses'},d:'세계 최대 웰스매니지먼트 하우스. 신중하고, 조용하고, 오래가요. 수백 년 이어진 고객 가문을 몇 대째 관리하는 게 전혀 지루하지 않은 당신이에요.',tags:['#WM','#신중','#롱텀']},
+ {n:'Nomura',nick:'아시아에서 세계로',t:'외국계',p:[2,1,0,2],c:{suit:'#8a1538',tie:'#fff',hair:'#111',acc:'bag'},d:'일본 리테일 최강자가 리먼을 인수하며 글로벌에 도전했던 그 결기. 관계와 정을 중시하면서도 큰 승부를 피하지 않는 당신이에요. 아시아적인 끈기 플러스 야망.',tags:['#아시아','#끈기','#도전']},
+];
+
+const $=id=>document.getElementById(id);
+function charHTML(f){
+ const c=f.c;const extra=c.extra?`<i class="${c.extra}"></i>`:'';
+ return `<div class="ch" style="--suit:${c.suit};--tie:${c.tie};--hair:${c.hair}"><i class="hair"></i><i class="face"></i><i class="eye"></i><i class="body"></i><i class="shirt"></i><i class="tie"></i><i class="leg a"></i><i class="leg b"></i><i class="acc ${c.acc}"></i>${extra}</div>`;
+}
+
+// 거리: 두 차선에 16명씩 (두 번 반복해서 무한 루프)
+(function(){
+ const sky=[];for(let i=0;i<22;i++){sky.push(`<i style="width:${22+((i*37)%30)}px;height:${18+((i*53)%48)}px"></i>`)}
+ $('skyline').innerHTML=sky.join('');
+ const mk=f=>`<div class="wrapch"><span class="tag">${f.n}</span>${charHTML(f)}</div>`;
+ const a=FIRMS.filter((_,i)=>i%2===0).map(mk).join(''), b=FIRMS.filter((_,i)=>i%2===1).map(mk).join('');
+ $('lane1').innerHTML=a+a; $('lane2').innerHTML=b+b;
+})();
+
+let idx=0, answers=[];
+const screens=['intro','quiz','result','all'];
+function show(s){screens.forEach(x=>$(x).hidden=(x!==s));window.scrollTo({top:0,behavior:'smooth'})}
+
+function render(){
+ const q=Q[idx];
+ $('progText').textContent='STAGE '+String(idx+1).padStart(2,'0')+'/12';
+ $('hp').innerHTML=Q.map((_,i)=>`<i class="${i<idx?'on':''}"></i>`).join('');
+ $('qText').textContent=q.q;
+ $('opts').innerHTML=q.a.map((t,i)=>`<button class="opt" data-i="${i}">${t}</button>`).join('');
+ $('backBtn').hidden=(idx===0);
+}
+$('opts').addEventListener('click',e=>{const b=e.target.closest('.opt');if(!b)return;answers[idx]=+b.dataset.i;idx++;if(idx>=Q.length){finish()}else render()});
+$('backBtn').onclick=()=>{if(idx>0){idx--;render()}};
+$('startBtn').onclick=$('retryBtn').onclick=()=>{idx=0;answers=[];render();show('quiz')};
+$('seeAllBtn').onclick=$('allBtn').onclick=()=>{renderAll();show('all')};
+$('homeBtn').onclick=()=>show('intro');
+
+function score(){
+ const s={};AXES.forEach(a=>s[a.k]=0);
+ Q.forEach((q,i)=>{if(answers[i]===1)s[q.ax]++});
+ const code=AXES.map(a=>s[a.k]>=2?a.r[0]:a.l[0]).join('');
+ const v=AXES.map(a=>s[a.k]);
+ const ranked=FIRMS.map(f=>({f,dist:f.p.reduce((t,x,i)=>t+Math.abs(x-v[i]),0)})).sort((a,b)=>a.dist-b.dist);
+ return {s,code,ranked};
+}
+function finish(){
+ const {s,code,ranked}=score();const f=ranked[0].f;
+ $('rStage').innerHTML=charHTML(f);
+ $('rCode').textContent='TYPE '+code; $('rRegion').textContent=f.t==='국내'?'KOREA':'GLOBAL';
+ $('rNick').textContent=f.nick; $('rName').textContent=f.n; $('rDesc').textContent=f.d;
+ $('rTags').innerHTML=f.tags.map(t=>`<span>${t}</span>`).join('');
+ $('axes').innerHTML=AXES.map(a=>{const r=s[a.k];const right=r>=2;
+  const cells=[0,1,2].map(i=>`<i class="${(right?i<r:i<3-r)?'f':''}"></i>`);if(!right)cells.reverse();
+  return `<div class="axis"><span class="l${right?'':' on'}">${a.l[1]}</span><span class="track">${cells.join('')}</span><span class="r${right?' on':''}">${a.r[1]}</span></div>`}).join('');
+ const soul=ranked[1].f, opp=ranked[ranked.length-1].f;
+ $('rSoulCh').innerHTML=charHTML(soul); $('rOppCh').innerHTML=charHTML(opp);
+ $('rSoul').textContent=soul.n; $('rSoulWhy').textContent='두 번째로 닮은 곳';
+ $('rOpp').textContent=opp.n; $('rOppWhy').textContent='제일 안 닮은 곳';
+ $('toast').textContent='';
+ show('result');
+}
+$('copyBtn').onclick=()=>{
+ const {code,ranked}=score();const f=ranked[0].f;
+ const text=`[나에게 맞는 증권사는?]\n${f.n} — ${f.nick}\n유형: ${code}\n${f.tags.join(' ')}`;
+ const done=()=>$('toast').textContent='복사했어요. 친구한테 붙여넣기 해보세요.';
+ if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(done).catch(()=>fallback(text))}else fallback(text);
+ function fallback(t){const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done()}catch(e){$('toast').textContent='복사가 막혀 있어요. 결과를 캡처해서 공유해 주세요.'}ta.remove()}
+};
+function renderAll(){
+ const cell=f=>`<div class="cell"><div class="mini">${charHTML(f)}</div><div style="min-width:0"><strong>${f.n}</strong><small>${f.nick}</small></div></div>`;
+ $('gridK').innerHTML=FIRMS.filter(f=>f.t==='국내').map(cell).join('');
+ $('gridG').innerHTML=FIRMS.filter(f=>f.t==='외국계').map(cell).join('');
+}
+</script>
+</body>
+</html>
